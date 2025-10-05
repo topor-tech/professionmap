@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+:root {
+  /* Microsoft Office Dark Theme Colors */
+  --color-logo: #030e18;
+  --color-background: #030e18;
+  --color-surface: #2d2d30;
+  --color-surface-hover: #3e3e42;
+  --color-border: #3e3e42;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #cccccc;
+  --color-text-muted: #8a8a8a;
+  
+  /* Microsoft Office Brand Colors */
+  --color-office-blue: #0078d4;
+  --color-office-blue-hover: #106ebe;
+  --color-office-green: #107c10;
+  --color-office-orange: #d83b01;
+  --color-office-purple: #5c2d91;
+  --color-office-red: #d13438;
+  --color-office-yellow: #ffb900;
+  
+  /* Accent colors */
+  --color-accent: var(--color-office-blue);
+  --color-accent-hover: var(--color-office-blue-hover);
+  --color-success: var(--color-office-green);
+  --color-warning: var(--color-office-yellow);
+  --color-error: var(--color-office-red);
+}
+
+html,
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  color-scheme: dark;
+}
+
+/* Dark theme overrides for common elements */
+.bg-white {
+  background-color: var(--color-surface) !important;
+}
+
+.bg-gray-50 {
+  background-color: var(--color-surface) !important;
+}
+
+.bg-gray-100 {
+  background-color: var(--color-surface-hover) !important;
+}
+
+.text-gray-900 {
+  color: var(--color-text-primary) !important;
+}
+
+.text-gray-700 {
+  color: var(--color-text-secondary) !important;
+}
+
+.text-gray-500 {
+  color: var(--color-text-muted) !important;
+}
+
+.border-gray-200 {
+  border-color: var(--color-border) !important;
+}
+
+.border-gray-300 {
+  border-color: var(--color-border) !important;
+}
+
+/* Microsoft Office-style button colors */
+.btn-primary {
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.btn-success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.btn-warning {
+  background-color: var(--color-warning);
+  color: #1e1e1e;
+}
+
+.btn-error {
+  background-color: var(--color-error);
+  color: white;
+}

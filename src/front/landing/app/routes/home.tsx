@@ -19,7 +19,7 @@ export default function Home() {
               className="h-32 w-auto"
             />
             <h1 className="text-4xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
-              Добро пожаловать на к нам!
+              Добро пожаловать к нам!
             </h1>
           </div>
         </header>

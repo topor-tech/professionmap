@@ -12,7 +12,6 @@
 - [ ] **Веб-сервер**: Nginx
 
 ### 1.2 Архитектура системы
-- [ ] **Микросервисная архитектура** с разделением на модули:
   - [ ] Модуль аутентификации и авторизации
   - [ ] Модуль управления пользователями
   - [ ] Модуль вакансий
@@ -32,8 +31,29 @@
 ## Этап 2: База данных и модели
 
 ### 2.1 Проектирование схемы БД
-- [ ] **Таблица пользователей (users)**
-  - id, email, password_hash, role, created_at, updated_at
+- [x] **Таблица пользователей (users)**
+  - id
+  - email
+  - phone
+  - telegram
+  - name
+  - password_hash
+  - created_at
+  - updated_at
+
+- [x] **enum доступных ролей** 
+  class UserRole(Enum):
+    ADMIN = "admin"           # Администратор ОЭЗ
+    HR = "hr"                 # HR компании  
+    UNIVERSITY = "university" # Представитель вуза
+    CANDIDATE = "candidate"   # Соискатель
+
+- [x] **Таблица ролей пользователей (user_rolse)**
+    - id
+    - user_id
+    - role
+
+
 - [ ] **Таблица компаний (companies)**
   - id, name, description, contact_info, created_at
 - [ ] **Таблица вакансий (vacancies)**

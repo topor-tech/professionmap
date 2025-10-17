@@ -7,7 +7,7 @@ from jose import jwt
 from fastapi import APIRouter, HTTPException, status, Depends, Request, Response
 from sqlalchemy.orm import Session
 
-from ats.orm import get_db
+from ats.database import get_db
 from ats.config import settings
 
 router = APIRouter(prefix="/login", tags=["login"])

@@ -39,7 +39,7 @@ def check_hr_permissions(current_user) -> None:
         )
 
 
-@router.post("/create_company", response_model=CreateCompanyResponse)
+@router.post("/hr/create_company", response_model=CreateCompanyResponse)
 async def create_company(
     company_data: CreateCompanyRequest,
     request: Request,

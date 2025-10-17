@@ -34,7 +34,7 @@ export default function MyCompanies() {
 
   const fetchCompanies = async () => {
     try {
-      const response = await fetch(getApiUrl("/api/v1/ats/companies"), {
+      const response = await fetch(getApiUrl("/api/v1/ats/hr/companies"), {
         credentials: "include",
       });
 
@@ -58,7 +58,7 @@ export default function MyCompanies() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(getApiUrl("/api/v1/ats/create_company"), {
+      const response = await fetch(getApiUrl("/api/v1/ats/hr/create_company"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

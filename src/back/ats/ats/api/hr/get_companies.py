@@ -20,7 +20,7 @@ class CompanyResponse(BaseModel):
     created_at: datetime
 
 
-@router.get("/companies", response_model=List[CompanyResponse])
+@router.get("/hr/companies", response_model=List[CompanyResponse])
 async def get_user_companies(
     request: Request,
     db: Session = Depends(get_db)

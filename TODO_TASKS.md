@@ -53,14 +53,22 @@
     - user_id
     - role
 
-- [ ] **Таблица компаний (companies)**
+- [X] **Таблица компаний (companies)**
   - id
   - name 
   - public_description
   - created_at
 
-- [ ] **Таблица вакансий (vacancies)**
-  - id, company_id, title, description, requirements, status, expires_at, created_at
+- [X] **Таблица вакансий (vacancies)**
+  - id
+  - company_id
+  - title
+  - description
+  - requirements
+  - status [enum: Active | Closed | On Review]
+  - expires_at
+  - created_at
+  
 - [ ] **Таблица стажировок (internships)**
   - id, university_id, specialty, student_count, period_start, period_end, status, created_at
 - [ ] **Таблица резюме (resumes)**

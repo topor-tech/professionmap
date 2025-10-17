@@ -2,6 +2,7 @@ import type { Route } from "./+types/login";
 import { Link, useNavigate } from "react-router";
 import { useState } from "react";
 import "./login.css";
+import { getApiUrl } from "../utils/api";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -35,7 +36,7 @@ export default function Login() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/api/v1/ats/login", {
+      const response = await fetch(getApiUrl("/api/v1/ats/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

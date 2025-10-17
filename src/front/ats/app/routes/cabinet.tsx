@@ -1,6 +1,7 @@
 import type { Route } from "./+types/cabinet";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
+import { getApiUrl } from "../utils/api";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -18,7 +19,7 @@ export default function Cabinet() {
     // Fetch user info - the cookie will be automatically included in the request
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/v1/ats/user_info", {
+        const response = await fetch(getApiUrl("/api/v1/ats/user_info"), {
           credentials: "include", // This ensures cookies are sent with the request
         });
 
@@ -43,7 +44,7 @@ export default function Cabinet() {
   const handleLogout = async () => {
     try {
       // Call the backend logout endpoint to clear the cookie
-      await fetch("http://127.0.0.1:8000/api/v1/ats/logout", {
+      await fetch(getApiUrl("/api/v1/ats/logout"), {
         method: "POST",
         credentials: "include", // Include cookies in the request
       });

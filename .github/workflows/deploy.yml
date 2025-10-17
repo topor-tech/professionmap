@@ -20,7 +20,7 @@ jobs:
     - name: Run database migrations
       run: |
         cd deploy
-        docker compose exec professionmap-ats alembic upgrade head
+        docker compose run professionmap-ats alembic upgrade head
 
     - name: Start services with Docker Compose
       run: |

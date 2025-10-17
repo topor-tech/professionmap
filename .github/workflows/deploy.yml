@@ -12,10 +12,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Create prod.env file
+      run: |
+        cd deploy
+        echo "${{ secrets.ENV_FILE }}" > prod.env
+
     - name: Build Docker Compose with Sentry
       run: |
         cd deploy
-        echo "${{ secrets.ENV_FILE }}" > .env
         docker compose build
 
     - name: Start services with Docker Compose

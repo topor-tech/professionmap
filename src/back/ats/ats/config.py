@@ -34,10 +34,21 @@ class Settings(BaseSettings):
         default=[
             "http://localhost:8000",
             "http://localhost:5173",
+            "https://ats.professionmap.ru",
             "https://professionmap.ru",
         ],
         description="Allowed CORS origins",
     )
+
+    superuser_email: str = Field(
+        default="admin@professionmap.ru",
+        description="Superuser email",
+    )
+    superuser_password: str = Field(
+        default="admin",
+        description="Superuser password",
+    )
+    
 
     class Config:
         env_file = ".env"

@@ -1,5 +1,6 @@
 import type { Route } from "./+types/login";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useState } from "react";
 import "./login.css";
 
 export function meta({}: Route.MetaArgs) {
@@ -10,6 +11,55 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Login() {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (error) setError("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/v1/ats/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Store the token in localStorage
+        localStorage.setItem("ats_access_token", data.access_token);
+        // Navigate to home page or dashboard
+        navigate("/");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.detail || "Ошибка входа в систему");
+      }
+    } catch (err) {
+      setError("Ошибка соединения с сервером");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main className="flex items-center justify-center min-h-screen login-container">
       <div className="w-full max-w-md mx-auto px-4">
@@ -23,7 +73,13 @@ export default function Login() {
         </div>
 
         <div className="rounded-3xl p-8 shadow-lg login-form-container">
-          <form className="space-y-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+          
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2 login-label">
                 Email
@@ -32,8 +88,11 @@ export default function Login() {
                 type="email"
                 id="email"
                 name="email"
+                value={formData.email}
+                onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 login-input"
+                disabled={isLoading}
+                className="w-full px-4 py-3 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 login-input disabled:opacity-50"
                 placeholder="Введите ваш email"
               />
             </div>
@@ -46,35 +105,21 @@ export default function Login() {
                 type="password"
                 id="password"
                 name="password"
+                value={formData.password}
+                onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 login-input"
+                disabled={isLoading}
+                className="w-full px-4 py-3 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 login-input disabled:opacity-50"
                 placeholder="Введите ваш пароль"
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 login-checkbox"
-                />
-                <span className="ml-2 text-sm login-checkbox-label">
-                  Запомнить меня
-                </span>
-              </label>
-              <Link 
-                to="/forgot-password" 
-                className="text-sm hover:underline login-forgot-link"
-              >
-                Забыли пароль?
-              </Link>
-            </div>
-
             <button
               type="submit"
-              className="w-full py-3 px-4 rounded-lg font-medium transition-colors login-submit-button"
+              disabled={isLoading}
+              className="w-full py-3 px-4 rounded-lg font-medium transition-colors login-submit-button disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Войти
+              {isLoading ? "Вход..." : "Войти"}
             </button>
           </form>
 

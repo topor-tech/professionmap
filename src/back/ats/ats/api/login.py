@@ -12,7 +12,6 @@ from ats.config import settings
 from ats.orm.user import User
 
 router = APIRouter(tags=["login"])
-ATS_JWT_COOKIE_NAME = "ats_access_token"
 
 
 class LoginRequest(BaseModel):
@@ -55,13 +54,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login")
 async def login(
     login_data: LoginRequest,
+    response: Response,
     db: Session = Depends(get_db)
 ):
     """
-    Login endpoint that checks if user is superuser and provides access token.
+    Login endpoint that checks if user is superuser and sets access token as HTTP-only cookie.
     Only allows login for the configured superuser credentials.
     """
     # Check if the provided credentials match the superuser credentials
@@ -75,14 +75,35 @@ async def login(
             expires_delta=access_token_expires
         )
         
-        return LoginResponse(
-            access_token=access_token,
-            token_type="bearer",
-            expires_in=settings.access_token_expire_minutes * 60  # Convert to seconds
+        # Set the access token as an HTTP-only cookie
+        response.set_cookie(
+            key=settings.jwt_cookie_name,
+            value=access_token,
+            max_age=settings.access_token_expire_minutes * 60,  # Convert to seconds
+            httponly=True,
+            secure=True,  # Set to True in production with HTTPS
+            samesite="lax"
         )
+        
+        return {"message": "Login successful"}
     
     # If credentials don't match, do nothing (return 401)
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid credentials"
     )
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    """
+    Logout endpoint that clears the access token cookie.
+    """
+    response.delete_cookie(
+        key=settings.jwt_cookie_name,
+        httponly=True,
+        secure=True,
+        samesite="lax"
+    )
+    
+    return {"message": "Logout successful"}

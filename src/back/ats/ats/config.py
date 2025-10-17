@@ -49,6 +49,12 @@ class Settings(BaseSettings):
         description="Superuser password",
     )
     
+    # Cookie settings
+    jwt_cookie_name: str = Field(
+        default="ats_access_token",
+        description="Name of the JWT cookie",
+    )
+    
 
     class Config:
         env_file = ".env"

@@ -13,6 +13,7 @@ class UserRole(Enum):
     HR = "hr"                 # HR компании  
     UNIVERSITY = "university" # Представитель вуза
     CANDIDATE = "candidate"   # Соискатель
+    SUPERUSER = "superuser"   # Суперпользователь
 
 
 class User(Base):

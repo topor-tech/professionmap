@@ -73,8 +73,10 @@ async def login(
             value=access_token,
             max_age=settings.access_token_expire_minutes * 60,  # Convert to seconds
             httponly=True,
-            secure=True,  # Set to True in production with HTTPS
-            samesite="lax"
+            secure=not settings.is_development,  # False in development, True in production
+            samesite="lax",
+            domain="localhost" if settings.is_development else None,  # Set domain for localhost
+            path="/"  # Ensure cookie is available for all paths
         )
         
         return {"message": "Login successful"}
@@ -114,8 +116,10 @@ async def login(
                 key=settings.jwt_cookie_name,
                 value=access_token,
                 httponly=True,
-                secure=True,  # Set to True in production with HTTPS
-                samesite="lax"
+                secure=not settings.is_development,  # False in development, True in production
+                samesite="lax",
+                domain="localhost" if settings.is_development else None,  # Set domain for localhost
+                path="/"  # Ensure cookie is available for all paths
             )
             
             return {"message": "Login successful"}
@@ -135,8 +139,10 @@ async def logout(response: Response):
     response.delete_cookie(
         key=settings.jwt_cookie_name,
         httponly=True,
-        secure=True,
-        samesite="lax"
+        secure=not settings.is_development,  # False in development, True in production
+        samesite="lax",
+        domain="localhost" if settings.is_development else None,  # Set domain for localhost
+        path="/"  # Ensure cookie is available for all paths
     )
     
     return {"message": "Logout successful"}

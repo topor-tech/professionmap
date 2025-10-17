@@ -35,20 +35,20 @@ export default function Login() {
     setError("");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/ats/login", {
+      const response = await fetch("http://localhost:8000/api/v1/ats/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // This is required for cookies to be sent and received
         body: JSON.stringify(formData),
       });
 
       if (response.ok) {
-        const data = await response.json();
-        // Store the token in localStorage
-        localStorage.setItem("ats_access_token", data.access_token);
-        // Navigate to home page or dashboard
-        navigate("/");
+        // The backend sets the JWT token as an HTTP-only cookie
+        // No need to manually store it, it's handled by the browser
+        // Navigate to cabinet after successful login
+        navigate("/cabinet");
       } else {
         const errorData = await response.json();
         setError(errorData.detail || "Ошибка входа в систему");

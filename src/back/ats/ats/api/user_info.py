@@ -23,7 +23,14 @@ async def get_current_user_info(
     otherwise returns user info from database.
     """
     jwt_token_payload = get_current_user_from_token(request)
-    
+
+    if jwt_token_payload.id == 0:
+        return UserJWTTokenInfoResponse(
+            id=0,
+            email=settings.superuser_email,
+            name="Superuser",
+            roles=[UserRole.SUPERUSER.value]
+        )
 
     user = db.query(User).filter(User.id == jwt_token_payload.id).first()
     if not user:

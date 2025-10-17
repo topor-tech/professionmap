@@ -3,13 +3,13 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 
 import bcrypt
-from jose import jwt
 from fastapi import APIRouter, HTTPException, status, Depends, Request, Response
 from sqlalchemy.orm import Session
 
 from ats.database import get_db
 from ats.config import settings
-from ats.orm.user import User
+from ats.orm.user import User, UserRoleAssociation, UserRole
+from ats.libs.jwt import create_access_token, JWTTokenPayload
 
 router = APIRouter(tags=["login"])
 
@@ -40,18 +40,6 @@ def get_password_hash(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    """Create a JWT access token."""
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(
-        to_encode, settings.jwt_secret_key, algorithm=settings.algorithm
-    )
-    return encoded_jwt
 
 
 @router.post("/login")
@@ -61,18 +49,22 @@ async def login(
     db: Session = Depends(get_db)
 ):
     """
-    Login endpoint that checks if user is superuser and sets access token as HTTP-only cookie.
-    Only allows login for the configured superuser credentials.
+    Login endpoint that handles both superuser and database user authentication.
+    Sets access token as HTTP-only cookie for successful logins.
     """
     # Check if the provided credentials match the superuser credentials
     if (login_data.email == settings.superuser_email and 
         login_data.password == settings.superuser_password):
         
-        # Create access token
+        # Create access token for superuser
         access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
         access_token = create_access_token(
-            data={"sub": login_data.email, "role": "superuser"},
-            expires_delta=access_token_expires
+            data=JWTTokenPayload(
+                sub=login_data.email,
+                id=0,
+                roles=[UserRole.SUPERUSER.value],
+                exp=datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes),
+            )
         )
         
         # Set the access token as an HTTP-only cookie
@@ -87,7 +79,48 @@ async def login(
         
         return {"message": "Login successful"}
     
-    # If credentials don't match, do nothing (return 401)
+    # Check if user exists in database
+    user = db.query(User).filter(User.email == login_data.email).first()
+    if user:
+        # Verify password for database user
+        if verify_password(login_data.password, user.password_hash):
+            # Get user roles from database
+            user_roles = db.query(UserRoleAssociation.role).filter(
+                UserRoleAssociation.user_id == user.id,
+                UserRoleAssociation.role != UserRole.CANDIDATE,
+            ).all()
+            
+            # Check if user has at least one role
+            if not user_roles:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User has no assigned roles"
+                )
+            
+            user_roles = [role.role for role in user_roles]
+            # Create access token for database user with roles
+            access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+            access_token = create_access_token(
+                data=JWTTokenPayload(
+                    sub=user.email, 
+                    id=user.id,
+                    roles=user_roles,
+                    exp=datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes),
+                )
+            )
+            
+            # Set the access token as an HTTP-only cookie
+            response.set_cookie(
+                key=settings.jwt_cookie_name,
+                value=access_token,
+                httponly=True,
+                secure=True,  # Set to True in production with HTTPS
+                samesite="lax"
+            )
+            
+            return {"message": "Login successful"}
+    
+    # If credentials don't match for either superuser or database user
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid credentials"

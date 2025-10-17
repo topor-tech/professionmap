@@ -3,7 +3,6 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 
 import bcrypt
-from jose import jwt, JWTError
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -11,6 +10,7 @@ from sqlalchemy import or_
 from ats.database import get_db
 from ats.config import settings
 from ats.orm.user import User, UserRole, UserRoleAssociation
+from ats.libs.jwt import get_current_user_from_token
 
 router = APIRouter(tags=["users"])
 
@@ -40,38 +40,9 @@ def get_password_hash(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
 
-def verify_jwt_token(token: str) -> dict:
-    """Verify and decode JWT token"""
-    try:
-        payload = jwt.decode(
-            token, 
-            settings.jwt_secret_key, 
-            algorithms=[settings.algorithm]
-        )
-        return payload
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
 
 
-def get_current_user_from_token(request: Request) -> dict:
-    """Extract and validate JWT token from request cookies"""
-    # Try to get token from cookies
-    token = request.cookies.get(settings.jwt_cookie_name)
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication cookie missing",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    return verify_jwt_token(token)
-
-
-@router.post("/users", response_model=CreateUserResponse)
+@router.post("/create_user", response_model=CreateUserResponse)
 async def create_user(
     user_data: CreateUserRequest,
     request: Request,
@@ -112,24 +83,24 @@ async def create_user(
     db.flush()  # Flush to get the user ID
     
     # Add user roles
+    created_roles = []
     for role in user_data.roles:
-        role_association = UserRoleAssociation(
-            user_id=new_user.id,
-            role=role
-        )
-        db.add(role_association)
+        if role not in current_user.roles:
+            role_association = UserRoleAssociation(
+                user_id=new_user.id,
+                role=role
+            )
+            db.add(role_association)
+            created_roles.append(role)
     
     db.commit()
     db.refresh(new_user)
     
-    # Get the created user with roles
-    created_user = db.query(User).filter(User.id == new_user.id).first()
-    user_roles = [role_assoc.role for role_assoc in created_user.roles if role_assoc.role != UserRole.ADMIN]
     
     return CreateUserResponse(
-        id=created_user.id,
-        email=created_user.email,
-        name=created_user.name,
-        roles=user_roles,
-        created_at=created_user.created_at
+        id=new_user.id,
+        email=new_user.email,
+        name=new_user.name,
+        roles=created_roles,
+        created_at=new_user.created_at
     )

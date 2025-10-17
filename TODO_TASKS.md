@@ -3,16 +3,16 @@
 ## Этап 1: Архитектура и инфраструктура
 
 ### 1.1 Выбор технологического стека
-- [ ] **Backend**: python + alembic + fastAPI
-- [ ] **Frontend**: React + TypeScript + Vite
-- [ ] **База данных**: PostgreSQL
-- [ ] **Аутентификация**: JWT + bcrypt
+- [X] **Backend**: python + alembic + fastAPI
+- [X] **Frontend**: React + TypeScript + Vite
+- [X] **База данных**: PostgreSQL
+- [X] **Аутентификация**: JWT
 - [ ] **Файловое хранилище**: AWS S3 или локальное хранилище
-- [ ] **Контейнеризация**: Docker + Docker Compose
-- [ ] **Веб-сервер**: Nginx
+- [X] **Контейнеризация**: Docker + Docker Compose
+- [X] **Веб-сервер**: Nginx
 
 ### 1.2 Архитектура системы
-  - [ ] Модуль аутентификации и авторизации
+  - [X] Модуль аутентификации и авторизации
   - [ ] Модуль управления пользователями
   - [ ] Модуль вакансий
   - [ ] Модуль стажировок
@@ -53,11 +53,22 @@
     - user_id
     - role
 
+- [X] **Таблица компаний (companies)**
+  - id
+  - name 
+  - public_description
+  - created_at
 
-- [ ] **Таблица компаний (companies)**
-  - id, name, description, contact_info, created_at
-- [ ] **Таблица вакансий (vacancies)**
-  - id, company_id, title, description, requirements, status, expires_at, created_at
+- [X] **Таблица вакансий (vacancies)**
+  - id
+  - company_id
+  - title
+  - description
+  - requirements
+  - status [enum: Active | Closed | On Review]
+  - expires_at
+  - created_at
+  
 - [ ] **Таблица стажировок (internships)**
   - id, university_id, specialty, student_count, period_start, period_end, status, created_at
 - [ ] **Таблица резюме (resumes)**
@@ -74,54 +85,21 @@
 ## Этап 3: Backend API
 
 ### 3.1 Модуль аутентификации
-- [ ] **POST /api/auth/register** - регистрация пользователей
-- [ ] **POST /api/auth/login** - вход в систему
-- [ ] **POST /api/auth/logout** - выход из системы
-- [ ] **GET /api/auth/me** - получение информации о текущем пользователе
-- [ ] **POST /api/auth/refresh** - обновление токена
+- [X] 
 
-### 3.3 Модуль вакансий
-- [ ] **GET /api/vacancies** - публичный каталог вакансий
-- [ ] **GET /api/vacancies/:id** - детали вакансии
-- [ ] **POST /api/vacancies** - создание вакансии (HR)
-- [ ] **PUT /api/vacancies/:id** - редактирование вакансии
-- [ ] **DELETE /api/vacancies/:id** - удаление вакансии
-- [ ] **GET /api/vacancies/my** - мои вакансии (HR)
-- [ ] **POST /api/vacancies/:id/apply** - отклик на вакансию
-- [ ] **GET /api/vacancies/:id/applications** - отклики на вакансию (HR)
+### 3.3 Модуль создания вакансий и стажировок
+- [ ]
 
-### 3.4 Модуль стажировок
-- [ ] **GET /api/internships** - каталог стажировок
-- [ ] **GET /api/internships/:id** - детали стажировки
-- [ ] **POST /api/internships** - создание заявки на стажировку (вуз)
-- [ ] **PUT /api/internships/:id** - редактирование заявки
-- [ ] **POST /api/internships/:id/apply** - отклик компании на стажировку
-- [ ] **GET /api/internships/my** - мои заявки на стажировки (вуз)
 
-### 3.5 Модуль резюме и откликов
-- [ ] **POST /api/resumes/upload** - загрузка файла резюме
-- [ ] **POST /api/resumes/form** - создание резюме через форму
-- [ ] **GET /api/resumes/my** - мои резюме
-- [ ] **PUT /api/resumes/:id** - редактирование резюме
-- [ ] **DELETE /api/resumes/:id** - удаление резюме
-- [ ] **GET /api/applications/my** - мои отклики (соискатель)
-- [ ] **GET /api/applications/received** - полученные отклики (HR)
+### 3.5 Модуль загрзки резюме и откликов
+- [ ]
 
 
 ## Этап 4: Frontend приложение
 
-### 4.1 Настройка проекта
-- [ ] Создание React приложения с TypeScript
-- [ ] Настройка Vite для сборки
-- [ ] Настройка роутинга (React Router)
-- [ ] Настройка state management (Redux Toolkit или Zustand)
-- [ ] Настройка UI библиотеки (Material-UI, Ant Design или Chakra UI)
-
 ### 4.2 Компоненты аутентификации
 - [ ] **LoginForm** - форма входа
 - [ ] **RegisterForm** - форма регистрации
-- [ ] **AuthGuard** - защита маршрутов
-- [ ] **RoleGuard** - проверка ролей пользователей
 
 ### 4.3 Публичные страницы
 - [ ] **LandingPage** - главная страница

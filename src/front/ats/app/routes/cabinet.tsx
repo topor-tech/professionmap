@@ -14,6 +14,28 @@ export default function Cabinet() {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [vacancyStats, setVacancyStats] = useState<{
+    active_vacancies: number;
+    on_review_vacancies: number;
+    total_vacancies: number;
+  } | null>(null);
+
+  const fetchVacancyStats = async () => {
+    try {
+      const response = await fetch(getApiUrl("/api/v1/ats/hr/vacancies/stats"), {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setVacancyStats(data);
+      } else {
+        console.error("Failed to fetch vacancy stats:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching vacancy stats:", error);
+    }
+  };
 
   useEffect(() => {
     // Fetch user info - the cookie will be automatically included in the request
@@ -26,6 +48,8 @@ export default function Cabinet() {
         if (response.ok) {
           const data = await response.json();
           setUserInfo(data);
+          // Fetch vacancy stats after user info is loaded
+          await fetchVacancyStats();
         } else {
           // If unauthorized, redirect to login
           navigate("/login");
@@ -99,8 +123,10 @@ export default function Cabinet() {
           {/* Stats Cards */}
           <div className="bg-gray-800 rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-2">Активные вакансии</h3>
-            <p className="text-3xl font-bold text-blue-400">0</p>
-            <p className="text-sm opacity-70 mt-1">Всего вакансий</p>
+            <p className="text-3xl font-bold text-blue-400">
+              {vacancyStats?.active_vacancies ?? 0}
+            </p>
+            <p className="text-sm opacity-70 mt-1">На модерации: {vacancyStats?.on_review_vacancies ?? 0}</p>
           </div>
 
           <div className="bg-gray-800 rounded-lg p-6">
@@ -120,9 +146,20 @@ export default function Cabinet() {
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-6">Быстрые действия</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors">
-              <h3 className="text-lg font-semibold mb-2">Создать вакансию</h3>
-              <p className="text-sm opacity-70">Добавить новую вакансию</p>
+            <button 
+              onClick={() => navigate("/cabinet/my-companies")}
+              className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors"
+            >
+              <h3 className="text-lg font-semibold mb-2">Мои компании</h3>
+              <p className="text-sm opacity-70">Управление компаниями</p>
+            </button>
+
+            <button 
+              onClick={() => navigate("/cabinet/my-vacancies")}
+              className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors"
+            >
+              <h3 className="text-lg font-semibold mb-2">Мои вакансии</h3>
+              <p className="text-sm opacity-70">Управление вакансиями</p>
             </button>
 
             <button className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors">
@@ -133,11 +170,6 @@ export default function Cabinet() {
             <button className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors">
               <h3 className="text-lg font-semibold mb-2">Просмотр отчетов</h3>
               <p className="text-sm opacity-70">Аналитика и статистика</p>
-            </button>
-
-            <button className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors">
-              <h3 className="text-lg font-semibold mb-2">Настройки</h3>
-              <p className="text-sm opacity-70">Управление профилем</p>
             </button>
           </div>
         </div>

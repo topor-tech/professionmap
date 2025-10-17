@@ -9,6 +9,17 @@ services:
       - NODE_ENV=production
     restart: unless-stopped
 
+  ats:
+    build:
+      context: ../src/front/ats
+      dockerfile: Dockerfile
+    ports:
+      - "2333:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+
   professionmap-ats:
     build:
       context: ../src/back/ats

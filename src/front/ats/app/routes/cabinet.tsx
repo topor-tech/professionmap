@@ -14,6 +14,28 @@ export default function Cabinet() {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [vacancyStats, setVacancyStats] = useState<{
+    active_vacancies: number;
+    on_review_vacancies: number;
+    total_vacancies: number;
+  } | null>(null);
+
+  const fetchVacancyStats = async () => {
+    try {
+      const response = await fetch(getApiUrl("/api/v1/ats/hr/vacancies/stats"), {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setVacancyStats(data);
+      } else {
+        console.error("Failed to fetch vacancy stats:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching vacancy stats:", error);
+    }
+  };
 
   useEffect(() => {
     // Fetch user info - the cookie will be automatically included in the request
@@ -26,6 +48,8 @@ export default function Cabinet() {
         if (response.ok) {
           const data = await response.json();
           setUserInfo(data);
+          // Fetch vacancy stats after user info is loaded
+          await fetchVacancyStats();
         } else {
           // If unauthorized, redirect to login
           navigate("/login");
@@ -99,8 +123,10 @@ export default function Cabinet() {
           {/* Stats Cards */}
           <div className="bg-gray-800 rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-2">Активные вакансии</h3>
-            <p className="text-3xl font-bold text-blue-400">0</p>
-            <p className="text-sm opacity-70 mt-1">Всего вакансий</p>
+            <p className="text-3xl font-bold text-blue-400">
+              {vacancyStats?.active_vacancies ?? 0}
+            </p>
+            <p className="text-sm opacity-70 mt-1">На модерации: {vacancyStats?.on_review_vacancies ?? 0}</p>
           </div>
 
           <div className="bg-gray-800 rounded-lg p-6">

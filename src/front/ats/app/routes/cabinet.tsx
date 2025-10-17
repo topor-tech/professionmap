@@ -120,6 +120,14 @@ export default function Cabinet() {
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-6">Быстрые действия</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button 
+              onClick={() => navigate("/my-companies")}
+              className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors"
+            >
+              <h3 className="text-lg font-semibold mb-2">Мои компании</h3>
+              <p className="text-sm opacity-70">Управление компаниями</p>
+            </button>
+
             <button className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors">
               <h3 className="text-lg font-semibold mb-2">Создать вакансию</h3>
               <p className="text-sm opacity-70">Добавить новую вакансию</p>
@@ -133,11 +141,6 @@ export default function Cabinet() {
             <button className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors">
               <h3 className="text-lg font-semibold mb-2">Просмотр отчетов</h3>
               <p className="text-sm opacity-70">Аналитика и статистика</p>
-            </button>
-
-            <button className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors">
-              <h3 className="text-lg font-semibold mb-2">Настройки</h3>
-              <p className="text-sm opacity-70">Управление профилем</p>
             </button>
           </div>
         </div>

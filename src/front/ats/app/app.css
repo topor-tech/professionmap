@@ -1,0 +1,263 @@
+@import "tailwindcss";
+
+:root {
+  /* Основная цветовая палитра */
+  --color-primary: #D00E46;        /* Pantone 1935C - Малиново-красный */
+  --color-primary-hover: #B00C3A;  /* Темнее основной */
+  --color-primary-light: #E63D6B;  /* Светлее основной */
+  
+  --color-secondary: #4D4D4F;       /* Pantone 877C - Графитовый серый */
+  --color-secondary-hover: #3A3A3C; /* Темнее вторичного */
+  --color-secondary-light: #6B6B6D; /* Светлее вторичного */
+  
+  --color-accent: #C49A6C;          /* Pantone 871C - Золотой */
+  --color-accent-hover: #B0885A;    /* Темнее акцентного */
+  --color-accent-light: #D4B080;    /* Светлее акцентного */
+  
+  /* Дополнительные гармоничные цвета */
+  --color-complement: #0E46D0;      /* Дополнительный к основному */
+  --color-complement-hover: #0B3AB0;
+  --color-complement-light: #3D6BE6;
+  
+  --color-neutral: #2A2A2C;         /* Нейтральный темный */
+  --color-neutral-hover: #1F1F21;   /* Темнее нейтрального */
+  --color-neutral-light: #404042;  /* Светлее нейтрального */
+  
+  /* Темная тема - основные цвета */
+  --color-background: #1A1A1C;      /* Очень темный фон */
+  --color-surface: #2A2A2C;         /* Поверхности */
+  --color-surface-hover: #3A3A3C;   /* Hover состояния */
+  --color-border: #4D4D4F;          /* Границы */
+  
+  /* Текст */
+  --color-text-primary: #FFFFFF;    /* Основной текст */
+  --color-text-secondary: #C49A6C;  /* Вторичный текст (золотой) */
+  --color-text-muted: #6B6B6D;      /* Приглушенный текст */
+  --color-text-accent: #D00E46;      /* Акцентный текст */
+  
+  /* Системные цвета */
+  --color-success: #4CAF50;         /* Зеленый для успеха */
+  --color-warning: #FF9800;         /* Оранжевый для предупреждений */
+  --color-error: #D00E46;            /* Основной красный для ошибок */
+  --color-info: #0E46D0;            /* Синий для информации */
+}
+
+html,
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  color-scheme: dark;
+}
+
+/* Dark theme overrides for common elements */
+.bg-white {
+  background-color: var(--color-surface) !important;
+}
+
+.bg-gray-50 {
+  background-color: var(--color-surface) !important;
+}
+
+.bg-gray-100 {
+  background-color: var(--color-surface-hover) !important;
+}
+
+.text-gray-900 {
+  color: var(--color-text-primary) !important;
+}
+
+.text-gray-700 {
+  color: var(--color-text-secondary) !important;
+}
+
+.text-gray-500 {
+  color: var(--color-text-muted) !important;
+}
+
+.border-gray-200 {
+  border-color: var(--color-border) !important;
+}
+
+.border-gray-300 {
+  border-color: var(--color-border) !important;
+}
+
+/* Кнопки в новой цветовой палитре */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(208, 14, 70, 0.3);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: white;
+  border: 1px solid var(--color-border);
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-secondary-hover);
+  border-color: var(--color-secondary-light);
+}
+
+.btn-accent {
+  background-color: var(--color-accent);
+  color: var(--color-background);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.btn-accent:hover {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(196, 154, 108, 0.3);
+}
+
+.btn-success {
+  background-color: var(--color-success);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+}
+
+.btn-warning {
+  background-color: var(--color-warning);
+  color: var(--color-background);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-warning:hover {
+  background-color: #e68900;
+  transform: translateY(-1px);
+}
+
+.btn-error {
+  background-color: var(--color-error);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-error:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(208, 14, 70, 0.3);
+}
+
+.btn-info {
+  background-color: var(--color-info);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-info:hover {
+  background-color: var(--color-complement-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(14, 70, 208, 0.3);
+}
+
+/* Дополнительные утилитарные классы для новой палитры */
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.text-secondary {
+  color: var(--color-text-secondary) !important;
+}
+
+.text-accent {
+  color: var(--color-accent) !important;
+}
+
+.text-muted {
+  color: var(--color-text-muted) !important;
+}
+
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.bg-secondary {
+  background-color: var(--color-secondary) !important;
+}
+
+.bg-accent {
+  background-color: var(--color-accent) !important;
+}
+
+.bg-surface {
+  background-color: var(--color-surface) !important;
+}
+
+.bg-surface-hover {
+  background-color: var(--color-surface-hover) !important;
+}
+
+.border-primary {
+  border-color: var(--color-primary) !important;
+}
+
+.border-secondary {
+  border-color: var(--color-secondary) !important;
+}
+
+.border-accent {
+  border-color: var(--color-accent) !important;
+}
+
+/* Специальные эффекты */
+.shadow-primary {
+  box-shadow: 0 4px 8px rgba(208, 14, 70, 0.3) !important;
+}
+
+.shadow-accent {
+  box-shadow: 0 4px 8px rgba(196, 154, 108, 0.3) !important;
+}
+
+.shadow-info {
+  box-shadow: 0 4px 8px rgba(14, 70, 208, 0.3) !important;
+}
+
+/* Градиенты */
+.gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light)) !important;
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-light)) !important;
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-secondary-light)) !important;
+}

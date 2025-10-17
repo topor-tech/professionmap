@@ -2,7 +2,7 @@ name: Deploy Application
 
 on:
   push:
-    branches: [ trunk, add-back ]
+    branches: [ trunk, ats ]
 
 jobs:
   deploy:
@@ -11,6 +11,11 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Create prod.env file
+      run: |
+        cd deploy
+        echo "${{ secrets.ENV_FILE }}" > prod.env
 
     - name: Build Docker Compose with Sentry
       run: |

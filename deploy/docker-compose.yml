@@ -9,6 +9,17 @@ services:
       - NODE_ENV=production
     restart: unless-stopped
 
+  ats:
+    build:
+      context: ../src/front/ats
+      dockerfile: Dockerfile
+    ports:
+      - "2333:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+
   professionmap-ats:
     build:
       context: ../src/back/ats
@@ -17,6 +28,9 @@ services:
       - "8333:8000"
     environment:
       - DATABASE_URL=postgresql://ats:ats@professionmap-postgres:5432/professionmap_ats
+      - IS_DEVELOPMENT=false
+    env_file:
+      - prod.env
     depends_on:
       - professionmap-postgres
     restart: unless-stopped

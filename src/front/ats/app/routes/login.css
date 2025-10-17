@@ -1,0 +1,61 @@
+/* Login page styles */
+.login-container {
+  background-color: #030e18;
+  color: var(--color-text-primary);
+}
+
+.login-title {
+  color: var(--color-text-primary);
+}
+
+.login-subtitle {
+  color: var(--color-text-secondary);
+}
+
+.login-form-container {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.login-label {
+  color: var(--color-text-primary);
+}
+
+.login-input {
+  background-color: var(--color-background);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.login-checkbox {
+  accent-color: var(--color-accent);
+}
+
+.login-checkbox-label {
+  color: var(--color-text-secondary);
+}
+
+.login-forgot-link {
+  color: var(--color-accent);
+}
+
+.login-submit-button {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.login-submit-button:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.login-register-text {
+  color: var(--color-text-secondary);
+}
+
+.login-register-link {
+  color: var(--color-accent);
+}
+
+.login-back-link {
+  color: var(--color-text-muted);
+}

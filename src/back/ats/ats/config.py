@@ -32,12 +32,42 @@ class Settings(BaseSettings):
     # CORS settings
     cors_origins: list[str] = Field(
         default=[
-            "http://localhost:8000",
-            "http://localhost:5173",
+            "https://ats.professionmap.ru",
             "https://professionmap.ru",
         ],
         description="Allowed CORS origins",
     )
+    
+    # Development CORS settings
+    cors_origins_dev: list[str] = Field(
+        default=[
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
+        description="Development CORS origins",
+    )
+
+    superuser_email: str = Field(
+        default="admin@professionmap.ru",
+        description="Superuser email",
+    )
+    superuser_password: str = Field(
+        default="admin",
+        description="Superuser password",
+    )
+    
+    # Cookie settings
+    jwt_cookie_name: str = Field(
+        default="ats_access_token",
+        description="Name of the JWT cookie",
+    )
+    
+    # Development settings
+    is_development: bool = Field(
+        default=True,
+        description="Whether running in development mode",
+    )
+    
 
     class Config:
         env_file = ".env"

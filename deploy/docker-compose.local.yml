@@ -1,0 +1,21 @@
+services:
+  professionmap-ats:
+    build:
+      context: ../src/back/ats
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres-local
+    environment:
+      - DATABASE_URL=postgresql://ats:ats@postgres-local:5432/professionmap_ats
+
+  postgres-local:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=ats
+      - POSTGRES_PASSWORD=ats
+      - POSTGRES_DB=professionmap_ats
+    restart: unless-stopped

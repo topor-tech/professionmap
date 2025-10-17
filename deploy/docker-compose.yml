@@ -8,3 +8,25 @@ services:
     environment:
       - NODE_ENV=production
     restart: unless-stopped
+
+  professionmap-ats:
+    build:
+      context: ../src/back/ats
+      dockerfile: Dockerfile
+    ports:
+      - "8333:8000"
+    environment:
+      - DATABASE_URL=postgresql://ats:ats@professionmap-postgres:5432/professionmap_ats
+    depends_on:
+      - professionmap-postgres
+    restart: unless-stopped
+
+  professionmap-postgres:
+    image: postgres:17-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=ats
+      - POSTGRES_PASSWORD=ats
+      - POSTGRES_DB=professionmap_ats
+    restart: unless-stopped

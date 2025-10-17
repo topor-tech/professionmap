@@ -68,9 +68,7 @@
   - id, internship_id, company_id, status, created_at
 
 ### 2.2 Создание миграций
-- [ ] Настройка TypeORM или Prisma
 - [ ] Создание миграций для всех таблиц
-- [ ] Настройка индексов для оптимизации запросов
 - [ ] Создание seed-данных для тестирования
 
 ## Этап 3: Backend API
@@ -81,15 +79,6 @@
 - [ ] **POST /api/auth/logout** - выход из системы
 - [ ] **GET /api/auth/me** - получение информации о текущем пользователе
 - [ ] **POST /api/auth/refresh** - обновление токена
-- [ ] Middleware для проверки JWT токенов
-- [ ] Middleware для проверки ролей пользователей
-
-### 3.2 Модуль управления пользователями
-- [ ] **GET /api/users** - список пользователей (для админа)
-- [ ] **GET /api/users/:id** - информация о пользователе
-- [ ] **PUT /api/users/:id** - обновление профиля
-- [ ] **DELETE /api/users/:id** - удаление пользователя
-- [ ] **POST /api/users/upload-avatar** - загрузка аватара
 
 ### 3.3 Модуль вакансий
 - [ ] **GET /api/vacancies** - публичный каталог вакансий
@@ -118,27 +107,6 @@
 - [ ] **GET /api/applications/my** - мои отклики (соискатель)
 - [ ] **GET /api/applications/received** - полученные отклики (HR)
 
-### 3.6 Модуль модерации
-- [ ] **GET /api/moderation/vacancies** - вакансии на модерации
-- [ ] **POST /api/moderation/vacancies/:id/approve** - одобрение вакансии
-- [ ] **POST /api/moderation/vacancies/:id/reject** - отклонение вакансии
-- [ ] **GET /api/moderation/internships** - заявки на стажировки на модерации
-- [ ] **POST /api/moderation/internships/:id/approve** - одобрение заявки
-- [ ] **POST /api/moderation/internships/:id/reject** - отклонение заявки
-
-### 3.7 Модуль статистики
-- [ ] **GET /api/statistics/overview** - общая статистика
-- [ ] **GET /api/statistics/vacancies** - статистика по вакансиям
-- [ ] **GET /api/statistics/internships** - статистика по стажировкам
-- [ ] **GET /api/statistics/users** - статистика пользователей
-- [ ] **POST /api/statistics/export** - экспорт статистики
-
-### 3.8 Модуль уведомлений
-- [ ] **GET /api/notifications** - получение уведомлений
-- [ ] **PUT /api/notifications/:id/read** - отметка уведомления как прочитанного
-- [ ] **POST /api/notifications/mark-all-read** - отметка всех уведомлений как прочитанных
-- [ ] Система отправки email-уведомлений
-- [ ] Интеграция с сервисом рассылок
 
 ## Этап 4: Frontend приложение
 

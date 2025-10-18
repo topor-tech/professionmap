@@ -1,0 +1,62 @@
+/* Candidate login page styles */
+.login-container {
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+.login-title {
+  color: #212529;
+}
+
+.login-subtitle {
+  color: #6c757d;
+}
+
+.login-form-container {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-label {
+  color: #212529;
+}
+
+.login-input {
+  background-color: #ffffff;
+  border-color: #ced4da;
+  color: #212529;
+}
+
+.login-checkbox {
+  accent-color: #007bff;
+}
+
+.login-checkbox-label {
+  color: #6c757d;
+}
+
+.login-forgot-link {
+  color: #007bff;
+}
+
+.login-submit-button {
+  background-color: #007bff;
+  color: white;
+}
+
+.login-submit-button:hover {
+  background-color: #0056b3;
+}
+
+.login-register-text {
+  color: #6c757d;
+}
+
+.login-register-link {
+  color: #007bff;
+}
+
+.login-back-link {
+  color: #adb5bd;
+}

@@ -2,7 +2,7 @@ import type { Route } from "./+types/apply";
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { getApiUrl } from "../utils/api";
-import { Navbar } from "../components/Navbar";
+import { CandidateNavbar } from "../components/CandidateNavbar";
 import "./apply.css";
 
 interface EmployeeRespond {
@@ -35,7 +35,7 @@ const statusColors: Record<string, string> = {
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Мои заявки - ProfessionMap ATS" },
+    { title: "Мои заявки - ProfessionMap" },
     { name: "description", content: "Просмотр статуса ваших заявок на вакансии" },
   ];
 }
@@ -107,13 +107,12 @@ export default function Apply() {
 
   return (
     <>
-      <Navbar currentPath="/apply" />
+      <CandidateNavbar currentPath="/apply" />
       <main className="apply-container">
         <div className="max-w-4xl mx-auto px-4 py-8">
           {/* Header */}
           <header className="apply-header">
             <div>
-              <h1 className="apply-title">Мои заявки</h1>
               <p className="apply-subtitle">
                 Добро пожаловать, {userInfo?.name || userInfo?.email}
               </p>

@@ -1,18 +1,18 @@
-import type { Route } from "./+types/login";
+import type { Route } from "./+types/home";
 import { Link, useNavigate } from "react-router";
 import { useState } from "react";
-import "./login.css";
+import "./candidate_login.css";
 import { getApiUrl } from "../utils/api";
 import { useToast } from "../components/ToastProvider";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Вход в систему - ProfessionMap ATS" },
-    { name: "description", content: "Войдите в систему управления вакансиями и кандидатами" },
+    { title: "Вход для кандидатов - ProfessionMap ATS" },
+    { name: "description", content: "Войдите в систему как кандидат для просмотра вакансий и подачи откликов" },
   ];
 }
 
-export default function Login() {
+export default function CandidateLogin() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
   const [formData, setFormData] = useState({
@@ -49,14 +49,8 @@ export default function Login() {
         // The backend sets the JWT token as an HTTP-only cookie
         // No need to manually store it, it's handled by the browser
         
-        // Navigate based on user roles
-        if (loginData.roles && loginData.roles.includes("candidate") && loginData.roles.length === 1) {
-          // User has only candidate role, navigate to apply page
-          setTimeout(() => navigate("/apply"), 1000);
-        } else {
-          // User has other roles (hr, admin, superuser, etc.), navigate to cabinet
-          setTimeout(() => navigate("/cabinet"), 1000);
-        }
+        // Navigate to apply page for candidates
+        setTimeout(() => navigate("/apply"), 1000);
       } else {
         const errorData = await response.json();
         showError("Ошибка входа", errorData.detail || "Неверные учетные данные");
@@ -73,10 +67,10 @@ export default function Login() {
       <div className="w-full max-w-md mx-auto px-4">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2 login-title">
-            Вход в систему
+            Вход для кандидатов
           </h1>
           <p className="text-lg login-subtitle">
-            Добро пожаловать в ProfessionMap ATS
+            Войдите в систему для просмотра вакансий и подачи откликов
           </p>
         </div>
 
@@ -121,30 +115,26 @@ export default function Login() {
               disabled={isLoading}
               className="w-full py-3 px-4 rounded-lg font-medium transition-colors login-submit-button disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Вход..." : "Войти"}
+              {isLoading ? "Вход..." : "Войти как кандидат"}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm login-register-text">
-              Нет аккаунта?{' '}
-              <a 
-                href="https://t.me/ra_coder" 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium hover:underline login-register-link"
-              >
-                Напиши нам в Telegram @ra_coder
-              </a>
-            </p>
-          </div>
 
           <div className="mt-6 text-center">
-            <Link 
-              to="/" 
+            <a 
+              href="http://professionmap.ru" 
               className="text-sm hover:underline login-back-link"
             >
               ← Вернуться на главную
+            </a>
+          </div>
+
+          <div className="mt-4 text-center">
+            <Link 
+              to="/login" 
+              className="text-sm hover:underline login-back-link"
+            >
+              Вход для HR и администраторов
             </Link>
           </div>
         </div>

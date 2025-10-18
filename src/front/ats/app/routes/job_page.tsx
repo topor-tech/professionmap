@@ -2,6 +2,7 @@ import type { Route } from "./+types/home";
 import { useLoaderData, Link } from "react-router";
 import { getApiUrl } from "../utils/api";
 import { useState } from "react";
+import { CandidateNavbar } from "../components/CandidateNavbar";
 import "./job_page.css";
 
 interface VacancyInfo {
@@ -161,6 +162,7 @@ export default function JobPage() {
 
   return (
     <main className="job-page-container">
+      <CandidateNavbar allowUnauthenticated={true} />
       <div className="job-page-content">
         {/* Header */}
         <header className="job-page-header">

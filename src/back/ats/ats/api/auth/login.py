@@ -23,9 +23,8 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     """Login response model"""
-    access_token: str
-    token_type: str = "bearer"
-    expires_in: int
+    message: str
+    roles: list[str]
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -43,12 +42,12 @@ def get_password_hash(password: str) -> str:
 
 
 
-@router.post("/auth/login")
+@router.post("/auth/login", response_model=LoginResponse)
 async def login(
     login_data: LoginRequest,
     response: Response,
     db: AsyncSession = Depends(get_async_db)
-):
+) -> LoginResponse:
     """
     Login endpoint that handles both superuser and database user authentication.
     Sets access token as HTTP-only cookie for successful logins.
@@ -80,7 +79,10 @@ async def login(
             path="/"  # Ensure cookie is available for all paths
         )
         
-        return {"message": "Login successful"}
+        return LoginResponse(
+            message="Login successful",
+            roles=[UserRole.SUPERUSER.value]
+        )
     
     # Check if user exists in database
     result = await db.execute(
@@ -94,7 +96,6 @@ async def login(
             roles_result = await db.execute(
                 select(UserRoleAssociation.role).filter(
                     UserRoleAssociation.user_id == user.id,
-                    UserRoleAssociation.role != UserRole.CANDIDATE,
                 )
             )
             user_roles = roles_result.scalars().all()
@@ -128,7 +129,10 @@ async def login(
                 path="/"  # Ensure cookie is available for all paths
             )
             
-            return {"message": "Login successful"}
+            return LoginResponse(
+                message="Login successful",
+                roles=[role.value for role in user_roles]
+            )
     
     # If credentials don't match for either superuser or database user
     raise HTTPException(

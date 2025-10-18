@@ -20,6 +20,12 @@ export default function Cabinet() {
     active_vacancies: number;
     on_review_vacancies: number;
     total_vacancies: number;
+    total_responds: number;
+    pending_responds: number;
+    rejected_responds: number;
+    interview_pending_responds: number;
+    job_offer_responds: number;
+    job_accepted_responds: number;
   } | null>(null);
 
   const fetchVacancyStats = async () => {
@@ -105,14 +111,22 @@ export default function Cabinet() {
 
           <div className="cabinet-stats-card">
             <h3 className="cabinet-stats-title">Кандидаты</h3>
-            <p className="cabinet-stats-value candidates">0</p>
-            <p className="cabinet-stats-subtitle">Всего кандидатов</p>
+            <p className="cabinet-stats-value candidates">
+              {vacancyStats?.total_responds ?? 0}
+            </p>
+            <p className="cabinet-stats-subtitle">
+              Всего кандидатов • Ожидают: {vacancyStats?.pending_responds ?? 0}
+            </p>
           </div>
 
           <div className="cabinet-stats-card">
             <h3 className="cabinet-stats-title">Интервью</h3>
-            <p className="cabinet-stats-value interviews">0</p>
-            <p className="cabinet-stats-subtitle">Запланировано</p>
+            <p className="cabinet-stats-value interviews">
+              {vacancyStats?.interview_pending_responds ?? 0}
+            </p>
+            <p className="cabinet-stats-subtitle">
+              Запланировано • Предложения: {vacancyStats?.job_offer_responds ?? 0}
+            </p>
           </div>
         </div>
 

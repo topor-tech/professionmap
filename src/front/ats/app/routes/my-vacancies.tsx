@@ -495,12 +495,12 @@ export default function MyVacancies() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "Active":
-        return "Активна";
-      case "Closed":
+      case "ACTIVE":
+        return "Активная";
+      case "CLOSED":
         return "Закрыта";
-      case "On Review":
-        return "На рассмотрении";
+      case "ON_REVIEW":
+        return "На модерации";
       default:
         return status;
     }

@@ -484,6 +484,12 @@ export default function Funnel() {
               </span>
               <span className="funnel-stat-label">Приняты</span>
             </div>
+            <div className="funnel-stat-card">
+              <span className="funnel-stat-number">
+                {filteredResponds.filter(r => r.status === "rejected").length}
+              </span>
+              <span className="funnel-stat-label">Отказ</span>
+            </div>
           </div>
 
           {/* Error */}

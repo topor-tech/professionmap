@@ -1,5 +1,5 @@
 import type { Route } from "./+types/funnel";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useEffect, useState, useRef } from "react";
 import { getApiUrl } from "../utils/api";
 import { Navbar } from "../components/Navbar";
@@ -67,21 +67,58 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function Funnel() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [responds, setResponds] = useState<EmployeeRespond[]>([]);
   const [vacancies, setVacancies] = useState<VacancyOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Filters
-  const [statusFilter, setStatusFilter] = useState("");
-  const [selectedVacancyIds, setSelectedVacancyIds] = useState<number[]>([]);
-  const [userSearchTerm, setUserSearchTerm] = useState("");
+  // Filters - initialize from URL params
+  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "");
+  const [selectedVacancyIds, setSelectedVacancyIds] = useState<number[]>(() => {
+    const vacancyIds = searchParams.get("vacancies");
+    return vacancyIds ? vacancyIds.split(",").map(id => parseInt(id, 10)).filter(id => !isNaN(id)) : [];
+  });
+  const [userSearchTerm, setUserSearchTerm] = useState(searchParams.get("search") || "");
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
   const [vacancySearchTerm, setVacancySearchTerm] = useState("");
   const [isVacancySearchOpen, setIsVacancySearchOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Function to update URL with current filter state
+  const updateUrlWithFilters = (newStatusFilter: string, newSelectedVacancyIds: number[], newUserSearchTerm: string) => {
+    const params = new URLSearchParams();
+    
+    if (newStatusFilter) {
+      params.set("status", newStatusFilter);
+    }
+    
+    if (newSelectedVacancyIds.length > 0) {
+      params.set("vacancies", newSelectedVacancyIds.join(","));
+    }
+    
+    if (newUserSearchTerm) {
+      params.set("search", newUserSearchTerm);
+    }
+    
+    const newSearch = params.toString();
+    const newUrl = newSearch ? `?${newSearch}` : window.location.pathname;
+    
+    // Update URL without triggering navigation
+    window.history.replaceState({}, "", newUrl);
+  };
+
+  // Function to clear all filters
+  const clearAllFilters = () => {
+    setStatusFilter("");
+    setSelectedVacancyIds([]);
+    setUserSearchTerm("");
+    setVacancySearchTerm("");
+    setIsVacancySearchOpen(false);
+    setHighlightedIndex(-1);
+  };
 
   const updateRespondStatus = async (respondId: number, newStatus: string) => {
     try {
@@ -174,6 +211,11 @@ export default function Funnel() {
       setIsLoading(false);
     }
   };
+
+  // Update URL when filters change
+  useEffect(() => {
+    updateUrlWithFilters(statusFilter, selectedVacancyIds, userSearchTerm);
+  }, [statusFilter, selectedVacancyIds, userSearchTerm]);
 
   useEffect(() => {
     fetchVacancies();
@@ -406,6 +448,12 @@ export default function Funnel() {
                     className="funnel-refresh-button"
                   >
                     🔄 Обновить
+                  </button>
+                  <button 
+                    onClick={clearAllFilters}
+                    className="funnel-clear-button"
+                  >
+                    🗑️ Очистить фильтры
                   </button>
                 </div>
               </div>

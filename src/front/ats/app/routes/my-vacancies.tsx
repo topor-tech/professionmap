@@ -1,5 +1,5 @@
 import type { Route } from "./+types/my-vacancies";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useEffect, useState, useRef } from "react";
 import { getApiUrl } from "../utils/api";
 import { Navbar } from "../components/Navbar";
@@ -38,6 +38,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function MyVacancies() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { showSuccess, showError } = useToast();
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -67,13 +68,58 @@ export default function MyVacancies() {
   const [selectedCompanyName, setSelectedCompanyName] = useState("");
   const companyInputRef = useRef<HTMLInputElement>(null);
   
-  // Filter states
+  // Filter states - initialize from URL params
   const [filterSuggestions, setFilterSuggestions] = useState<CompanySuggestion[]>([]);
   const [showFilterSuggestions, setShowFilterSuggestions] = useState(false);
   const [filterSearchQuery, setFilterSearchQuery] = useState("");
-  const [selectedFilterCompanies, setSelectedFilterCompanies] = useState<CompanySuggestion[]>([]);
-  const [filterStatus, setFilterStatus] = useState<"all" | "ON_REVIEW" | "ACTIVE" | "CLOSED">("all");
+  const [selectedFilterCompanies, setSelectedFilterCompanies] = useState<CompanySuggestion[]>(() => {
+    const companiesParam = searchParams.get("companies");
+    if (!companiesParam) return [];
+    
+    // Parse company IDs from URL and create placeholder objects
+    // We'll need to fetch company names later
+    const companyIds = companiesParam.split(",").map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+    return companyIds.map(id => ({ id, name: `Loading...` }));
+  });
+  const [filterStatus, setFilterStatus] = useState<"all" | "ON_REVIEW" | "ACTIVE" | "CLOSED">(
+    (searchParams.get("status") as "all" | "ON_REVIEW" | "ACTIVE" | "CLOSED") || "all"
+  );
   const filterInputRef = useRef<HTMLInputElement>(null);
+
+  // Function to update URL with current filter state
+  const updateUrlWithFilters = (newSelectedFilterCompanies: CompanySuggestion[], newFilterStatus: string) => {
+    const params = new URLSearchParams();
+    
+    if (newSelectedFilterCompanies.length > 0) {
+      params.set("companies", newSelectedFilterCompanies.map(c => c.id).join(","));
+    }
+    
+    if (newFilterStatus && newFilterStatus !== "all") {
+      params.set("status", newFilterStatus);
+    }
+    
+    const newSearch = params.toString();
+    const newUrl = newSearch ? `?${newSearch}` : window.location.pathname;
+    
+    // Update URL without triggering navigation
+    window.history.replaceState({}, "", newUrl);
+  };
+
+  // Update URL when filters change
+  useEffect(() => {
+    updateUrlWithFilters(selectedFilterCompanies, filterStatus);
+  }, [selectedFilterCompanies, filterStatus]);
+
+  // Resolve company names from IDs when companies are loaded
+  useEffect(() => {
+    if (companies.length > 0 && selectedFilterCompanies.some(c => c.name === "Loading...")) {
+      const resolvedCompanies = selectedFilterCompanies.map(company => {
+        const fullCompany = companies.find(c => c.id === company.id);
+        return fullCompany ? { id: company.id, name: fullCompany.name } : company;
+      });
+      setSelectedFilterCompanies(resolvedCompanies);
+    }
+  }, [companies, selectedFilterCompanies]);
 
   useEffect(() => {
     fetchData();

@@ -106,7 +106,6 @@ async def login(
                     detail="User has no assigned roles"
                 )
             
-            user_roles = [role.role for role in user_roles]
             # Create access token for database user with roles
             access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
             access_token = create_access_token(

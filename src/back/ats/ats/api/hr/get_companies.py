@@ -82,10 +82,10 @@ async def get_user_companies(
                 ).label("hr_users"),
             ).select_from(
                 my_company_access,
-            ).join(Company, my_company_access.company_id == Company.id)
+            ).join(Company, my_company_access.c.company_id == Company.id)
             .outerjoin(HRToCompanyAccess, Company.id == HRToCompanyAccess.company_id)
             .outerjoin(User, HRToCompanyAccess.user_id == User.id)
-            .where(my_company_access.user_id == current_user.id)
+            .where(my_company_access.c.user_id == current_user.id)
             .group_by(Company.id)
         )
         companies_data = result.all()

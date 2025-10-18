@@ -68,6 +68,16 @@ class Settings(BaseSettings):
         description="Whether running in development mode",
     )
     
+    # Sentry settings
+    sentry_dsn: str = Field(
+        default="https://db3f49e4536196db818fe565d27b8450@sentry.topor.tech/3",
+        description="Sentry DSN for error tracking",
+    )
+    sentry_environment: str = Field(
+        default="development",
+        description="Sentry environment name",
+    )
+    
 
     class Config:
         env_file = ".env"

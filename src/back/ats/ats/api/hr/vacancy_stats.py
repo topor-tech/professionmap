@@ -102,20 +102,12 @@ async def get_vacancy_stats(
     user_vacancies_result = await db.execute(user_vacancies_query)
     user_vacancy_ids = [row[0] for row in user_vacancies_result.all()]
     
-    # Get responds stats using the responds/stats logic
-    from ats.api.hr.get_responds_stats import get_responds_stats
+    # Get responds stats using the service function
+    from ats.services.responds_stats_service import get_responds_statistics
     
-    # Create a mock request object for the responds stats function
-    class MockRequest:
-        def __init__(self, headers):
-            self.headers = headers
-    
-    # Get the original request headers to pass to responds stats
-    mock_request = MockRequest(request.headers)
-    
-    # Call the responds stats function with all user's vacancy IDs
-    responds_stats_response = await get_responds_stats(
-        request=mock_request,
+    # Call the service function with all user's vacancy IDs
+    responds_stats_response = await get_responds_statistics(
+        current_user=current_user,
         vacancy_ids=user_vacancy_ids,
         db=db
     )

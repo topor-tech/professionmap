@@ -12,7 +12,7 @@ sentry_sdk.init(
     dsn=settings.sentry_dsn,
     environment=settings.sentry_environment,
     integrations=[
-        FastApiIntegration(auto_enabling_instrumentations=True),
+        FastApiIntegration(),
         SqlalchemyIntegration(),
     ],
     traces_sample_rate=1.0 if settings.is_development else 0.1,

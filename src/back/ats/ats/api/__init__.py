@@ -16,6 +16,7 @@ from ats.api.hr.edit_compamy import router as edit_company_router
 from ats.api.hr.update_vacancy import router as update_vacancy_router
 from ats.api.admin.get_vacancies import router as admin_get_vacancies_router
 from ats.api.admin.update_vacancy_status import router as admin_update_vacancy_status_router
+from ats.api.feed.get_vacancies import router as feed_get_vacancies_router
 
 router = APIRouter(prefix="/api/v1/ats")
 router.include_router(login_router)
@@ -34,6 +35,7 @@ router.include_router(edit_company_router)
 router.include_router(update_vacancy_router)
 router.include_router(admin_get_vacancies_router)
 router.include_router(admin_update_vacancy_status_router)
+router.include_router(feed_get_vacancies_router)
 
 __all__ = [
     "router",

@@ -1,4 +1,5 @@
 import type { Route } from "./+types/home";
+import { Link } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -60,20 +61,36 @@ export default function Home() {
               </li>
             </ul>
             
-            <a 
-              href="https://t.me/professionmap"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-8 p-4 rounded-xl block hover:opacity-90 transition-opacity"
-              style={{ 
-                backgroundColor: 'var(--color-accent)', 
-                border: '1px solid var(--color-accent-hover)' 
-              }}
-            >
-              <p className="font-medium text-center" style={{ color: 'white' }}>
-                Следите за обновлениями в Telegram!
-              </p>
-            </a>
+            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+              <Link 
+                to="/vacancies"
+                className="flex-1 p-4 rounded-xl hover:opacity-90 transition-opacity text-center"
+                style={{ 
+                  backgroundColor: 'var(--color-accent)', 
+                  border: '1px solid var(--color-accent-hover)' 
+                }}
+              >
+                <p className="font-medium" style={{ color: 'white' }}>
+                  Посмотреть вакансии
+                </p>
+              </Link>
+              
+              <a 
+                href="https://t.me/professionmap"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 p-4 rounded-xl hover:opacity-90 transition-opacity text-center"
+                style={{ 
+                  backgroundColor: 'var(--color-surface)', 
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-text-primary)'
+                }}
+              >
+                <p className="font-medium">
+                  Telegram канал
+                </p>
+              </a>
+            </div>
           </div>
         </div>
       </div>

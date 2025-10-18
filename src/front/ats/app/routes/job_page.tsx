@@ -1,6 +1,7 @@
 import type { Route } from "./+types/home";
 import { useLoaderData, Link } from "react-router";
 import { getApiUrl } from "../utils/api";
+import { useState } from "react";
 import "./job_page.css";
 
 interface VacancyInfo {
@@ -13,6 +14,20 @@ interface VacancyInfo {
   expires_at: string | null;
   created_at: string;
   company_name: string;
+}
+
+interface ApplicationFormData {
+  email: string;
+  phone: string;
+  telegram: string;
+  name: string;
+  password: string;
+}
+
+interface ApplicationResponse {
+  user_id: number;
+  respond_id: number;
+  message: string;
 }
 
 export function meta({ params }: { params: { id: string } }) {
@@ -53,6 +68,16 @@ export async function loader({ params }: { params: { id: string } }) {
 
 export default function JobPage() {
   const { vacancyInfo } = useLoaderData<typeof loader>();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState<ApplicationFormData>({
+    email: '',
+    phone: '',
+    telegram: '',
+    name: '',
+    password: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -70,6 +95,68 @@ export default function JobPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitMessage(null);
+
+    try {
+      const apiUrl = getApiUrl('/api/v1/ats/candidate/respond_no_login');
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          vacancy_id: vacancyInfo.id,
+          email: formData.email,
+          phone: formData.phone || null,
+          telegram: formData.telegram || null,
+          name: formData.name,
+          password: formData.password
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to submit application');
+      }
+
+      const result: ApplicationResponse = await response.json();
+      setSubmitMessage({ type: 'success', text: result.message });
+      
+      // Close modal after successful submission
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setFormData({ email: '', phone: '', telegram: '', name: '', password: '' });
+        setSubmitMessage(null);
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      setSubmitMessage({ 
+        type: 'error', 
+        text: error instanceof Error ? error.message : 'Failed to submit application' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setFormData({ email: '', phone: '', telegram: '', name: '', password: '' });
+    setSubmitMessage(null);
   };
 
   return (
@@ -136,15 +223,116 @@ export default function JobPage() {
 
           {/* Action Buttons */}
           <div className="job-actions">
-            <button className="apply-button">
+            <button 
+              className="apply-button"
+              onClick={() => setIsModalOpen(true)}
+            >
               Откликнуться
-            </button>
-            <button className="share-button">
-              Поделиться
             </button>
           </div>
         </div>
       </div>
+
+      {/* Application Modal */}
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Откликнуться на вакансию</h2>
+              <button className="modal-close" onClick={closeModal}>×</button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="application-form">
+              <div className="form-group">
+                <label htmlFor="name">Имя *</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Введите ваше имя"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="email">Email *</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Введите ваш email"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="phone">Телефон</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="Введите ваш телефон"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="telegram">Telegram</label>
+                <input
+                  type="text"
+                  id="telegram"
+                  name="telegram"
+                  value={formData.telegram}
+                  onChange={handleInputChange}
+                  placeholder="Введите ваш Telegram"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="password">Пароль *</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Создайте пароль для входа"
+                />
+              </div>
+
+              {submitMessage && (
+                <div className={`submit-message ${submitMessage.type}`}>
+                  {submitMessage.text}
+                </div>
+              )}
+
+              <div className="form-actions">
+                <button 
+                  type="button" 
+                  className="cancel-button"
+                  onClick={closeModal}
+                  disabled={isSubmitting}
+                >
+                  Отмена
+                </button>
+                <button 
+                  type="submit" 
+                  className="submit-button"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Отправка...' : 'Отправить отклик'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

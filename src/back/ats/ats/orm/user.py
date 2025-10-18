@@ -29,9 +29,9 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
-    # Relationship to user roles
+    # Relationships
     roles: Mapped[List["UserRoleAssociation"]] = relationship("UserRoleAssociation", back_populates="user")
-
+    
 
 class UserRoleAssociation(Base):
     """Association table for user roles (many-to-many relationship)"""

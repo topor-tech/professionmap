@@ -68,13 +68,19 @@
   - status [enum: Active | Closed | On Review]
   - expires_at
   - created_at
-  
+
+- [ ] **Таблица откликов (employe_respond)**
+  - id
+  - vacancy_id
+  - user_id
+  - status
+  - created_at
+
+
 - [ ] **Таблица стажировок (internships)**
   - id, university_id, specialty, student_count, period_start, period_end, status, created_at
 - [ ] **Таблица резюме (resumes)**
   - id, user_id, file_path, form_data, created_at
-- [ ] **Таблица откликов (applications)**
-  - id, vacancy_id, user_id, resume_id, status, created_at
 - [ ] **Таблица заявок на стажировки (internship_applications)**
   - id, internship_id, company_id, status, created_at
 

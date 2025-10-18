@@ -2,16 +2,16 @@ from sqlalchemy import Integer, String, DateTime, Text, ForeignKey, Enum as SQLE
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from enum import Enum
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 from .base import Base
 
 
 class VacancyStatus(Enum):
     """Enum for vacancy status"""
-    ACTIVE = "Active"
-    CLOSED = "Closed"
-    ON_REVIEW = "On Review"
+    ACTIVE = "ACTIVE"
+    CLOSED = "CLOSED"
+    ON_REVIEW = "ON_REVIEW"
 
 
 class Vacancy(Base):
@@ -26,4 +26,4 @@ class Vacancy(Base):
     status: Mapped[VacancyStatus] = mapped_column(SQLEnum(VacancyStatus), default=VacancyStatus.ON_REVIEW)
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    
+        

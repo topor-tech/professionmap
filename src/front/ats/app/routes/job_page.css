@@ -1,0 +1,294 @@
+/* Job page styles with light theme */
+.job-page-container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+.job-page-content {
+  max-width: 4xl;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Header */
+.job-page-header {
+  margin-bottom: 2rem;
+}
+
+.job-page-nav {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* Job Details */
+.job-details {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.job-header {
+  padding: 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.job-title-section {
+  flex: 1;
+}
+
+.job-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+
+.job-company {
+  margin-bottom: 1rem;
+}
+
+.company-name {
+  font-size: 1.125rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.job-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.job-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.status-active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-inactive {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.job-dates {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.job-date {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.date-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.date-value {
+  font-size: 0.875rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* Job Sections */
+.job-section {
+  padding: 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.job-section:last-of-type {
+  border-bottom: none;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+}
+
+.section-content {
+  color: #475569;
+  line-height: 1.6;
+}
+
+.job-description,
+.job-requirements {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Action Buttons */
+.job-actions {
+  padding: 2rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  background-color: #f8fafc;
+}
+
+.apply-button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 150px;
+}
+
+.apply-button:hover {
+  background-color: #2563eb;
+}
+
+.share-button {
+  background-color: white;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 150px;
+}
+
+.share-button:hover {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .job-page-content {
+    padding: 1rem;
+  }
+  
+  .job-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+  }
+  
+  .job-meta {
+    align-items: stretch;
+  }
+  
+  .job-dates {
+    align-items: stretch;
+  }
+  
+  .job-date {
+    align-items: stretch;
+  }
+  
+  .job-title {
+    font-size: 1.5rem;
+  }
+  
+  .job-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .apply-button,
+  .share-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .job-section {
+    padding: 1.5rem;
+  }
+  
+  .job-actions {
+    padding: 1.5rem;
+  }
+}
+
+/* Loading states */
+.job-page-container.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Error states */
+.job-error {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #dc2626;
+}
+
+.job-error h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.job-error p {
+  color: #64748b;
+  margin-bottom: 2rem;
+}
+
+.job-error .retry-button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.job-error .retry-button:hover {
+  background-color: #2563eb;
+}

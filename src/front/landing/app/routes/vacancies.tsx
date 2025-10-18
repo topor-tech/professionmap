@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Route } from "./+types/vacancies";
+import "./vacancies.css";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -63,13 +64,13 @@ export default function Vacancies() {
   };
 
   return (
-    <main className="flex items-center justify-center pt-16 pb-4" style={{ backgroundColor: '#030e18', color: 'var(--color-text-primary)' }}>
+    <main className="flex items-center justify-center pt-16 pb-4 vacancies-main">
       <div className="flex-1 flex flex-col items-center gap-8 min-h-0 max-w-6xl mx-auto px-4">
-        <header className="flex flex-col items-center gap-4">
-          <h1 className="text-4xl font-bold text-center" style={{ color: 'var(--color-text-primary)' }}>
+        <header className="flex flex-col items-center gap-4 vacancies-header">
+          <h1 className="text-4xl font-bold text-center">
             Актуальные вакансии
           </h1>
-          <p className="text-lg text-center" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="text-lg text-center">
             Найдите подходящую работу для начала карьеры
           </p>
         </header>
@@ -77,35 +78,23 @@ export default function Vacancies() {
         <div className="w-full">
           {loading && (
             <div className="flex justify-center items-center py-12">
-              <div className="text-lg" style={{ color: 'var(--color-text-secondary)' }}>
+              <div className="text-lg vacancies-loading">
                 Загрузка вакансий...
               </div>
             </div>
           )}
 
           {error && (
-            <div 
-              className="rounded-xl p-6 text-center"
-              style={{ 
-                backgroundColor: 'var(--color-surface)', 
-                border: '1px solid var(--color-border)' 
-              }}
-            >
-              <p className="text-lg" style={{ color: 'var(--color-text-secondary)' }}>
+            <div className="rounded-xl p-6 text-center vacancies-error-container">
+              <p className="text-lg vacancies-error-text">
                 Ошибка загрузки: {error}
               </p>
             </div>
           )}
 
           {!loading && !error && vacancies.length === 0 && (
-            <div 
-              className="rounded-xl p-6 text-center"
-              style={{ 
-                backgroundColor: 'var(--color-surface)', 
-                border: '1px solid var(--color-border)' 
-              }}
-            >
-              <p className="text-lg" style={{ color: 'var(--color-text-secondary)' }}>
+            <div className="rounded-xl p-6 text-center vacancies-empty-container">
+              <p className="text-lg vacancies-empty-text">
                 Пока нет доступных вакансий
               </p>
             </div>
@@ -116,29 +105,25 @@ export default function Vacancies() {
               {vacancies.map((vacancy) => (
                 <div
                   key={vacancy.id}
-                  className="rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow"
-                  style={{ 
-                    backgroundColor: 'var(--color-surface)', 
-                    border: '1px solid var(--color-border)' 
-                  }}
+                  className="rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow vacancy-card"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                      <h3 className="text-xl font-semibold mb-2 vacancy-title">
                         {vacancy.title}
                       </h3>
-                      <p className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>
+                      <p className="text-lg font-medium vacancy-company">
                         {vacancy.company_name}
                       </p>
                     </div>
-                    <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                    <span className="text-sm vacancy-date">
                       {formatDate(vacancy.created_at)}
                     </span>
                   </div>
                   
                   {vacancy.description && (
                     <div className="mb-4">
-                      <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                      <p className="text-sm leading-relaxed vacancy-description">
                         {vacancy.description}
                       </p>
                     </div>
@@ -146,10 +131,10 @@ export default function Vacancies() {
                   
                   {vacancy.requirements && (
                     <div>
-                      <h4 className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                      <h4 className="text-sm font-medium mb-2 vacancy-requirements-title">
                         Требования:
                       </h4>
-                      <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                      <p className="text-sm leading-relaxed vacancy-requirements-text">
                         {vacancy.requirements}
                       </p>
                     </div>

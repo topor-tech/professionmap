@@ -1,0 +1,69 @@
+/* Vacancies page styles with light theme colors */
+
+/* Main container */
+.vacancies-main {
+  background-color: #f8f9fa;
+  color: #2A2A2C;
+}
+
+/* Header styles */
+.vacancies-header h1 {
+  color: #2A2A2C;
+}
+
+.vacancies-header p {
+  color: #4D4D4F;
+}
+
+/* Loading state */
+.vacancies-loading {
+  color: #4D4D4F;
+}
+
+/* Error and empty state containers */
+.vacancies-error-container,
+.vacancies-empty-container {
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+}
+
+.vacancies-error-text,
+.vacancies-empty-text {
+  color: #4D4D4F;
+}
+
+/* Vacancy card styles */
+.vacancy-card {
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+  transition: box-shadow 0.3s ease;
+}
+
+.vacancy-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Vacancy content */
+.vacancy-title {
+  color: #2A2A2C;
+}
+
+.vacancy-company {
+  color: #C49A6C;
+}
+
+.vacancy-date {
+  color: #4D4D4F;
+}
+
+.vacancy-description {
+  color: #4D4D4F;
+}
+
+.vacancy-requirements-title {
+  color: #2A2A2C;
+}
+
+.vacancy-requirements-text {
+  color: #4D4D4F;
+}

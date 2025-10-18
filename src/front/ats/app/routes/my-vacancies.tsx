@@ -72,6 +72,7 @@ export default function MyVacancies() {
   const [showFilterSuggestions, setShowFilterSuggestions] = useState(false);
   const [filterSearchQuery, setFilterSearchQuery] = useState("");
   const [selectedFilterCompanies, setSelectedFilterCompanies] = useState<CompanySuggestion[]>([]);
+  const [filterStatus, setFilterStatus] = useState<"all" | "ON_REVIEW" | "ACTIVE" | "CLOSED">("all");
   const filterInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -298,8 +299,21 @@ export default function MyVacancies() {
   const clearAllFilters = () => {
     setSelectedFilterCompanies([]);
     setFilterSearchQuery("");
+    setFilterStatus("all");
     fetchVacancies();
   };
+
+  // Computed filtered vacancies
+  const filteredVacancies = vacancies.filter(vacancy => {
+    // Company filter
+    const companyMatch = selectedFilterCompanies.length === 0 || 
+      selectedFilterCompanies.some(company => company.id === vacancy.company_id);
+    
+    // Status filter
+    const statusMatch = filterStatus === "all" || vacancy.status === filterStatus;
+    
+    return companyMatch && statusMatch;
+  });
 
   const resetCreateForm = () => {
     setFormData({ 
@@ -450,51 +464,71 @@ export default function MyVacancies() {
           </div>
         </header>
 
-        {/* Company Filter */}
-        <div className="vacancies-filter">
-          <div className="vacancies-filter-content">
-            <label className="vacancies-filter-label">Фильтр по компаниям:</label>
-            <div className="vacancies-filter-input-container">
-              {/* Selected Companies Chips */}
-              {selectedFilterCompanies.length > 0 && (
-                <div className="vacancies-filter-chips">
-                  {selectedFilterCompanies.map((company) => (
-                    <div key={company.id} className="vacancies-filter-chip">
-                      <span>{company.name}</span>
-                      <button
-                        onClick={() => removeFilterCompany(company.id)}
-                        className="vacancies-filter-chip-remove"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    onClick={clearAllFilters}
-                    className="vacancies-filter-clear"
-                  >
-                    Очистить все
-                  </button>
+        {/* Filters */}
+        <div className="vacancies-filters">
+          {/* Company Filter */}
+          <div className="vacancies-filter">
+            <div className="vacancies-filter-content">
+              <label className="vacancies-filter-label">Фильтр по компаниям:</label>
+              <div className="vacancies-filter-input-container">
+                {/* Selected Companies Chips */}
+                {selectedFilterCompanies.length > 0 && (
+                  <div className="vacancies-filter-chips">
+                    {selectedFilterCompanies.map((company) => (
+                      <div key={company.id} className="vacancies-filter-chip">
+                        <span>{company.name}</span>
+                        <button
+                          onClick={() => removeFilterCompany(company.id)}
+                          className="vacancies-filter-chip-remove"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={clearAllFilters}
+                      className="vacancies-filter-clear"
+                    >
+                      Очистить все
+                    </button>
+                  </div>
+                )}
+                
+                {/* Search Input */}
+                <div className="vacancies-filter-input-wrapper">
+                  <SuggestionDropdown
+                    value={filterSearchQuery}
+                    onChange={(value) => {
+                      setFilterSearchQuery(value);
+                      fetchFilterSuggestions(value);
+                    }}
+                    onSelect={handleFilterSelect}
+                    suggestions={filterSuggestions.filter(company => !selectedFilterCompanies.some(selected => selected.id === company.id))}
+                    showSuggestions={showFilterSuggestions}
+                    onShowSuggestions={setShowFilterSuggestions}
+                    placeholder="Поиск компаний для фильтрации..."
+                    className="vacancies-filter-input"
+                    inputRef={filterInputRef}
+                  />
                 </div>
-              )}
-              
-              {/* Search Input */}
-              <div className="vacancies-filter-input-wrapper">
-                <SuggestionDropdown
-                  value={filterSearchQuery}
-                  onChange={(value) => {
-                    setFilterSearchQuery(value);
-                    fetchFilterSuggestions(value);
-                  }}
-                  onSelect={handleFilterSelect}
-                  suggestions={filterSuggestions.filter(company => !selectedFilterCompanies.some(selected => selected.id === company.id))}
-                  showSuggestions={showFilterSuggestions}
-                  onShowSuggestions={setShowFilterSuggestions}
-                  placeholder="Поиск компаний для фильтрации..."
-                  className="vacancies-filter-input"
-                  inputRef={filterInputRef}
-                />
               </div>
+            </div>
+          </div>
+
+          {/* Status Filter */}
+          <div className="vacancies-filter">
+            <div className="vacancies-filter-content">
+              <label className="vacancies-filter-label">Фильтр по статусу:</label>
+              <select 
+                value={filterStatus} 
+                onChange={(e) => setFilterStatus(e.target.value as any)}
+                className="vacancies-filter-select"
+              >
+                <option value="all">Все вакансии</option>
+                <option value="ON_REVIEW">На рассмотрении</option>
+                <option value="ACTIVE">Активные</option>
+                <option value="CLOSED">Закрытые</option>
+              </select>
             </div>
           </div>
         </div>
@@ -614,21 +648,28 @@ export default function MyVacancies() {
         )}
 
         {/* Vacancies List */}
-        {vacancies.length === 0 ? (
+        {filteredVacancies.length === 0 ? (
           <div className="vacancies-empty">
             <div className="vacancies-empty-icon">💼</div>
-            <h3 className="vacancies-empty-title">У вас пока нет вакансий</h3>
-            <p className="vacancies-empty-description">Создайте свою первую вакансию, чтобы начать работу</p>
+            <h3 className="vacancies-empty-title">
+              {vacancies.length === 0 ? "У вас пока нет вакансий" : "Нет вакансий по выбранным фильтрам"}
+            </h3>
+            <p className="vacancies-empty-description">
+              {vacancies.length === 0 
+                ? "Создайте свою первую вакансию, чтобы начать работу"
+                : "Попробуйте изменить фильтры или создать новую вакансию"
+              }
+            </p>
             <button
               onClick={() => setShowCreateForm(true)}
               className="vacancies-empty-button"
             >
-              Создать первую вакансию
+              {vacancies.length === 0 ? "Создать первую вакансию" : "Создать вакансию"}
             </button>
           </div>
         ) : (
           <div className="vacancies-grid">
-            {vacancies.map((vacancy) => (
+            {filteredVacancies.map((vacancy) => (
               <div key={vacancy.id} className="vacancies-card">
                 <div className="vacancies-card-header">
                   <div className="vacancies-card-content">

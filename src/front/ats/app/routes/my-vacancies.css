@@ -90,8 +90,20 @@
 }
 
 /* Filter section */
-.vacancies-filter {
+.vacancies-filters {
+  display: flex;
+  gap: 1rem;
   margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.vacancies-filter {
+  background-color: var(--color-background-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  flex: 1;
+  min-width: 300px;
 }
 
 .vacancies-filter-content {
@@ -257,6 +269,23 @@
 .vacancies-filter-input:focus {
   outline: none;
   border-color: var(--color-accent);
+}
+
+.vacancies-filter-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  min-width: 180px;
+  transition: all 0.2s ease;
+}
+
+.vacancies-filter-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .vacancies-filter-suggestions {

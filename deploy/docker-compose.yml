@@ -30,6 +30,7 @@ services:
       - DATABASE_URL=postgresql://ats:ats@professionmap-postgres:5432/professionmap_ats
       - IS_DEVELOPMENT=false
       - SENTRY_ENVIRONMENT=production
+      - BASE_URL=https://ats.professionmap.ru/job_page
     env_file:
       - prod.env
     depends_on:

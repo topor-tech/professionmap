@@ -19,6 +19,7 @@ class UserJWTTokenInfoResponse(BaseModel):
     """User JWT token info response model"""
     id: int  # User ID
     email: str
+    name: str
     roles: List[str] = []
 
 

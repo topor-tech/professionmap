@@ -40,6 +40,25 @@ interface EmployeeRespond {
   created_at: string;
 }
 
+interface StatusStats {
+  status: string;
+  count: number;
+}
+
+interface VacancyStats {
+  vacancy_id: number;
+  vacancy_title: string;
+  company_name: string;
+  total_responds: number;
+  status_breakdown: StatusStats[];
+}
+
+interface RespondsStatsResponse {
+  total_responds: number;
+  vacancies: VacancyStats[];
+  overall_status_breakdown: StatusStats[];
+}
+
 const STATUS_OPTIONS = [
   { value: "", label: "Все статусы" },
   { value: "pending", label: "Ожидает рассмотрения" },
@@ -70,6 +89,7 @@ export default function Funnel() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [responds, setResponds] = useState<EmployeeRespond[]>([]);
   const [vacancies, setVacancies] = useState<VacancyOption[]>([]);
+  const [stats, setStats] = useState<RespondsStatsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -212,6 +232,33 @@ export default function Funnel() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      if (selectedVacancyIds.length === 0) {
+        setStats(null);
+        return;
+      }
+
+      const params = new URLSearchParams();
+      selectedVacancyIds.forEach(id => params.append("vacancy_ids", id.toString()));
+      
+      const response = await fetch(getApiUrl(`/api/v1/ats/hr/responds/stats?${params.toString()}`), {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      } else if (response.status === 401) {
+        navigate("/login");
+      } else {
+        console.error("Error fetching stats");
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
+
   // Update URL when filters change
   useEffect(() => {
     updateUrlWithFilters(statusFilter, selectedVacancyIds, userSearchTerm);
@@ -220,6 +267,7 @@ export default function Funnel() {
   useEffect(() => {
     fetchVacancies();
     fetchResponds();
+    fetchStats();
   }, [statusFilter, selectedVacancyIds]);
 
   // Handle click outside to close search
@@ -251,6 +299,18 @@ export default function Funnel() {
       (respond.user.telegram && respond.user.telegram.toLowerCase().includes(searchLower))
     );
   });
+
+  // Helper functions to get stats from server response
+  const getStatsForStatus = (status: string): number => {
+    if (!stats) return 0;
+    const statusBreakdown = stats.overall_status_breakdown.find(s => s.status === status);
+    return statusBreakdown ? statusBreakdown.count : 0;
+  };
+
+  const getTotalStats = (): number => {
+    if (!stats) return filteredResponds.length;
+    return stats.total_responds;
+  };
 
   const addVacancySelection = (vacancyId: number) => {
     if (!selectedVacancyIds.includes(vacancyId)) {
@@ -462,31 +522,51 @@ export default function Funnel() {
 
           {/* Stats */}
           <div className="funnel-stats">
-            <div className="funnel-stat-card">
-              <span className="funnel-stat-number">{filteredResponds.length}</span>
+            <div 
+              className={`funnel-stat-card ${statusFilter === "" ? "funnel-stat-card-selected" : ""}`}
+              onClick={() => setStatusFilter("")}
+              style={{ cursor: 'pointer' }}
+            >
+              <span className="funnel-stat-number">{getTotalStats()}</span>
               <span className="funnel-stat-label">Всего кандидатов</span>
             </div>
-            <div className="funnel-stat-card">
+            <div 
+              className={`funnel-stat-card ${statusFilter === "pending" ? "funnel-stat-card-selected" : ""}`}
+              onClick={() => setStatusFilter("pending")}
+              style={{ cursor: 'pointer' }}
+            >
               <span className="funnel-stat-number">
-                {filteredResponds.filter(r => r.status === "pending").length}
+                {getStatsForStatus("pending")}
               </span>
               <span className="funnel-stat-label">Ожидают рассмотрения</span>
             </div>
-            <div className="funnel-stat-card">
+            <div 
+              className={`funnel-stat-card ${statusFilter === "interview_pending" ? "funnel-stat-card-selected" : ""}`}
+              onClick={() => setStatusFilter("interview_pending")}
+              style={{ cursor: 'pointer' }}
+            >
               <span className="funnel-stat-number">
-                {filteredResponds.filter(r => r.status === "interview_pending").length}
+                {getStatsForStatus("interview_pending")}
               </span>
               <span className="funnel-stat-label">На интервью</span>
             </div>
-            <div className="funnel-stat-card">
+            <div 
+              className={`funnel-stat-card ${statusFilter === "job_accepted" ? "funnel-stat-card-selected" : ""}`}
+              onClick={() => setStatusFilter("job_accepted")}
+              style={{ cursor: 'pointer' }}
+            >
               <span className="funnel-stat-number">
-                {filteredResponds.filter(r => r.status === "job_accepted").length}
+                {getStatsForStatus("job_accepted")}
               </span>
               <span className="funnel-stat-label">Приняты</span>
             </div>
-            <div className="funnel-stat-card">
+            <div 
+              className={`funnel-stat-card ${statusFilter === "rejected" ? "funnel-stat-card-selected" : ""}`}
+              onClick={() => setStatusFilter("rejected")}
+              style={{ cursor: 'pointer' }}
+            >
               <span className="funnel-stat-number">
-                {filteredResponds.filter(r => r.status === "rejected").length}
+                {getStatsForStatus("rejected")}
               </span>
               <span className="funnel-stat-label">Отказ</span>
             </div>

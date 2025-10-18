@@ -190,11 +190,35 @@
   padding: 1.5rem;
   text-align: center;
   transition: all 0.2s;
+  cursor: pointer;
+  user-select: none;
 }
 
 .funnel-stat-card:hover {
   background-color: var(--color-background);
   border-color: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.funnel-stat-card:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.funnel-stat-card-selected {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.funnel-stat-card-selected:hover {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 .funnel-stat-number {

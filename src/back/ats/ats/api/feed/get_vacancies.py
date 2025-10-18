@@ -8,6 +8,7 @@ from sqlalchemy import select, and_
 from ats.database import get_async_db
 from ats.orm.vacancy import Vacancy, VacancyStatus
 from ats.orm.company import Company
+from ats.config import settings
 
 router = APIRouter(tags=["feed"])
 
@@ -21,6 +22,7 @@ class PublicVacancyResponse(BaseModel):
     requirements: str | None
     created_at: datetime
     company_name: str
+    link: str
 
 
 @router.get("/feed/vacancies", response_model=List[PublicVacancyResponse])
@@ -70,6 +72,7 @@ async def get_active_vacancies(
             requirements=vacancy.requirements,
             created_at=vacancy.created_at,
             company_name=company_name,
+            link=f"{settings.base_url}/{vacancy.id}",
         )
         for vacancy, company_name in vacancies
     ]

@@ -79,6 +79,12 @@ class Settings(BaseSettings):
         description="Sentry environment name",
     )
     
+    # URL settings
+    base_url: str = Field(
+        default="https://ats.professionmap.ru/job_page",
+        description="Base URL for the application",
+    )
+    
 
     class Config:
         env_file = ".env"

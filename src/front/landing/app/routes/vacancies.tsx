@@ -17,6 +17,7 @@ interface Vacancy {
   requirements: string | null;
   created_at: string;
   company_name: string;
+  link: string;
 }
 
 export default function Vacancies() {
@@ -139,6 +140,17 @@ export default function Vacancies() {
                       </p>
                     </div>
                   )}
+                  
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <a
+                      href={vacancy.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors vacancy-apply-button"
+                    >
+                      Откликнуться
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>

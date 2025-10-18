@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 
 from ats.database import get_async_db
-from ats.orm import User, UserRole, Vacancy, VacancyStatus, EmployeeRespond, EmployeeRespondStatus
+from ats.orm import User, UserRole, UserRoleAssociation, Vacancy, VacancyStatus, EmployeeRespond, EmployeeRespondStatus
 from ats.libs.jwt import get_current_user_from_token
 
 router = APIRouter(tags=["candidate"])
@@ -30,17 +30,36 @@ async def respond_to_vacancy(
 ):
     """
     Respond to a vacancy as an authenticated user.
-    Requires valid JWT authentication and CANDIDATE role.
+    Requires valid JWT authentication. If user doesn't have CANDIDATE role,
+    it will be automatically added.
     """
     # Verify JWT token and get current user
     current_user = get_current_user_from_token(request)
     
-    # Check if user has CANDIDATE role
+    # Check if user has CANDIDATE role, if not add it
     if UserRole.CANDIDATE.value not in current_user.roles:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. CANDIDATE role required."
+        # Check if user already has CANDIDATE role in database
+        existing_role_result = await db.execute(
+            select(UserRoleAssociation).filter(
+                and_(
+                    UserRoleAssociation.user_id == current_user.id,
+                    UserRoleAssociation.role == UserRole.CANDIDATE
+                )
+            )
         )
+        existing_role = existing_role_result.scalar_one_or_none()
+        
+        if not existing_role:
+            # Add CANDIDATE role to user
+            role_association = UserRoleAssociation(
+                user_id=current_user.id,
+                role=UserRole.CANDIDATE
+            )
+            db.add(role_association)
+            await db.commit()
+        
+        # Update current_user roles for this request
+        current_user.roles.append(UserRole.CANDIDATE.value)
     
     # Check if vacancy exists and is active
     vacancy_result = await db.execute(

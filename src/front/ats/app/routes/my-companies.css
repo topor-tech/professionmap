@@ -425,6 +425,29 @@
   padding: 0.5rem 1rem;
 }
 
+/* Dark theme for selected user */
+@media (prefers-color-scheme: dark) {
+  .companies-selected-user {
+    background-color: #1e3a8a;
+    border-color: #3b82f6;
+  }
+
+  .companies-selected-user p {
+    color: #dbeafe;
+  }
+
+  .companies-selected-user button {
+    background-color: #1e40af;
+    border-color: #3b82f6;
+    color: #dbeafe;
+  }
+
+  .companies-selected-user button:hover {
+    background-color: #1d4ed8;
+    border-color: #60a5fa;
+  }
+}
+
 /* HR Admins Section Styles */
 .companies-card-hr-section {
   margin: 0.75rem 0;

@@ -3,6 +3,9 @@ import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { getApiUrl } from "../utils/api";
 import "./my-companies.css";
+import { useToast } from "../components/ToastProvider";
+import { SuggestionDropdown, type SuggestionItem } from "../components/SuggestionDropdown";
+import "../components/SuggestionDropdown.css";
 
 interface UserInfoResponse {
   id: number;
@@ -12,10 +15,7 @@ interface UserInfoResponse {
   telegram: string | null;
 }
 
-interface UserSuggestion {
-  id: number;
-  name: string;
-  email: string;
+interface UserSuggestion extends SuggestionItem {
   telegram: string | null;
 }
 
@@ -36,6 +36,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function MyCompanies() {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -104,13 +105,14 @@ export default function MyCompanies() {
         setCompanies([...companies, newCompany]);
         setFormData({ name: "", public_description: "" });
         setShowCreateForm(false);
+        showSuccess("Компания создана", `Компания "${newCompany.name}" успешно создана`);
       } else {
         const errorData = await response.json();
-        alert(`Ошибка создания компании: ${errorData.detail || "Неизвестная ошибка"}`);
+        showError("Ошибка создания", errorData.detail || "Не удалось создать компанию");
       }
     } catch (error) {
       console.error("Error creating company:", error);
-      alert("Ошибка при создании компании");
+      showError("Ошибка соединения", "Не удалось подключиться к серверу");
     } finally {
       setIsSubmitting(false);
     }
@@ -168,15 +170,15 @@ export default function MyCompanies() {
     }
   };
 
-  const handleUserSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
+  const handleUserSearchChange = (query: string) => {
     setUserSearchQuery(query);
     searchUsers(query);
   };
 
-  const selectUser = (user: UserSuggestion) => {
-    setSelectedUser(user);
-    setUserSearchQuery(`${user.name} (${user.email})`);
+  const selectUser = (user: SuggestionItem) => {
+    const userSuggestion = user as UserSuggestion;
+    setSelectedUser(userSuggestion);
+    setUserSearchQuery(`${userSuggestion.name} (${userSuggestion.email})`);
     setShowUserSuggestions(false);
     setUserFormMode("add");
   };
@@ -202,7 +204,7 @@ export default function MyCompanies() {
 
         if (response.ok) {
           const result = await response.json();
-          alert(result.message);
+          showSuccess("Пользователь добавлен", result.message);
           setUserFormData({
             email: "",
             name: "",
@@ -218,7 +220,7 @@ export default function MyCompanies() {
           fetchCompanies(); // Refresh companies list
         } else {
           const errorData = await response.json();
-          alert(`Ошибка добавления пользователя: ${errorData.detail || "Неизвестная ошибка"}`);
+          showError("Ошибка добавления", errorData.detail || "Не удалось добавить пользователя");
         }
       } else {
         // Create new user
@@ -237,7 +239,7 @@ export default function MyCompanies() {
 
         if (response.ok) {
           const newUser = await response.json();
-          alert(`Пользователь ${newUser.name} успешно создан с ролью HR`);
+          showSuccess("Пользователь создан", `Пользователь ${newUser.name} успешно создан с ролью HR`);
           setUserFormData({
             email: "",
             name: "",
@@ -253,12 +255,12 @@ export default function MyCompanies() {
           fetchCompanies(); // Refresh companies list
         } else {
           const errorData = await response.json();
-          alert(`Ошибка создания пользователя: ${errorData.detail || "Неизвестная ошибка"}`);
+          showError("Ошибка создания", errorData.detail || "Не удалось создать пользователя");
         }
       }
     } catch (error) {
       console.error("Error handling user:", error);
-      alert("Ошибка при обработке пользователя");
+      showError("Ошибка соединения", "Не удалось подключиться к серверу");
     } finally {
       setIsSubmittingUser(false);
     }
@@ -368,31 +370,16 @@ export default function MyCompanies() {
                   Поиск существующего пользователя
                 </label>
                 <div className="companies-user-search-container">
-                  <input
-                    type="text"
-                    id="user-search"
+                  <SuggestionDropdown
                     value={userSearchQuery}
                     onChange={handleUserSearchChange}
-                    className="companies-form-input"
+                    onSelect={selectUser}
+                    suggestions={userSuggestions}
+                    showSuggestions={showUserSuggestions}
+                    onShowSuggestions={setShowUserSuggestions}
                     placeholder="Введите имя, email или telegram для поиска"
+                    className="companies-user-search"
                   />
-                  {showUserSuggestions && userSuggestions.length > 0 && (
-                    <div className="companies-user-suggestions">
-                      {userSuggestions.map((user) => (
-                        <div
-                          key={user.id}
-                          className="companies-user-suggestion"
-                          onClick={() => selectUser(user)}
-                        >
-                          <div className="companies-user-suggestion-name">{user.name}</div>
-                          <div className="companies-user-suggestion-email">{user.email}</div>
-                          {user.telegram && (
-                            <div className="companies-user-suggestion-telegram">@{user.telegram}</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
 

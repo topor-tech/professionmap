@@ -3,6 +3,9 @@ import { useNavigate } from "react-router";
 import { useEffect, useState, useRef } from "react";
 import { getApiUrl } from "../utils/api";
 import "./my-vacancies.css";
+import { useToast } from "../components/ToastProvider";
+import { SuggestionDropdown, type SuggestionItem } from "../components/SuggestionDropdown";
+import "../components/SuggestionDropdown.css";
 
 interface Vacancy {
   id: number;
@@ -23,10 +26,7 @@ interface Company {
   created_at: string;
 }
 
-interface CompanySuggestion {
-  id: number;
-  name: string;
-}
+interface CompanySuggestion extends SuggestionItem {}
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -37,6 +37,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function MyVacancies() {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -178,13 +179,14 @@ export default function MyVacancies() {
         setCompanySearchQuery("");
         setSelectedCompanyName("");
         setShowCreateForm(false);
+        showSuccess("Вакансия создана", `Вакансия "${newVacancy.title}" успешно создана`);
       } else {
         const errorData = await response.json();
-        alert(`Ошибка создания вакансии: ${errorData.detail || "Неизвестная ошибка"}`);
+        showError("Ошибка создания", errorData.detail || "Не удалось создать вакансию");
       }
     } catch (error) {
       console.error("Error creating vacancy:", error);
-      alert("Ошибка при создании вакансии");
+      showError("Ошибка соединения", "Не удалось подключиться к серверу");
     } finally {
       setIsSubmitting(false);
     }
@@ -396,40 +398,20 @@ export default function MyVacancies() {
               
               {/* Search Input */}
               <div className="vacancies-filter-input-wrapper">
-                <input
-                  ref={filterInputRef}
-                  type="text"
+                <SuggestionDropdown
                   value={filterSearchQuery}
-                  onChange={(e) => {
-                    setFilterSearchQuery(e.target.value);
-                    fetchFilterSuggestions(e.target.value);
+                  onChange={(value) => {
+                    setFilterSearchQuery(value);
+                    fetchFilterSuggestions(value);
                   }}
-                  onFocus={() => {
-                    if (filterSearchQuery.length > 0) {
-                      setShowFilterSuggestions(true);
-                    }
-                  }}
-                  onBlur={() => {
-                    setTimeout(() => setShowFilterSuggestions(false), 200);
-                  }}
+                  onSelect={handleFilterSelect}
+                  suggestions={filterSuggestions.filter(company => !selectedFilterCompanies.some(selected => selected.id === company.id))}
+                  showSuggestions={showFilterSuggestions}
+                  onShowSuggestions={setShowFilterSuggestions}
                   placeholder="Поиск компаний для фильтрации..."
                   className="vacancies-filter-input"
+                  inputRef={filterInputRef}
                 />
-                {showFilterSuggestions && filterSuggestions.length > 0 && (
-                  <div className="vacancies-filter-suggestions">
-                    {filterSuggestions
-                      .filter(company => !selectedFilterCompanies.some(selected => selected.id === company.id))
-                      .map((company) => (
-                        <button
-                          key={company.id}
-                          onClick={() => handleFilterSelect(company)}
-                          className="vacancies-filter-suggestion"
-                        >
-                          {company.name}
-                        </button>
-                      ))}
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -447,41 +429,20 @@ export default function MyVacancies() {
                       Компания *
                     </label>
                     <div className="vacancies-company-search">
-                      <input
-                        ref={companyInputRef}
-                        type="text"
-                        id="company_search"
+                      <SuggestionDropdown
                         value={companySearchQuery}
-                        onChange={(e) => {
-                          setCompanySearchQuery(e.target.value);
-                          fetchCompanySuggestions(e.target.value);
+                        onChange={(value) => {
+                          setCompanySearchQuery(value);
+                          fetchCompanySuggestions(value);
                         }}
-                        onFocus={() => {
-                          if (companySearchQuery.length > 0) {
-                            setShowCompanySuggestions(true);
-                          }
-                        }}
-                        onBlur={() => {
-                          setTimeout(() => setShowCompanySuggestions(false), 200);
-                        }}
+                        onSelect={handleCompanySelect}
+                        suggestions={companySuggestions}
+                        showSuggestions={showCompanySuggestions}
+                        onShowSuggestions={setShowCompanySuggestions}
                         placeholder="Поиск компании..."
-                        required
-                        className="vacancies-form-input"
+                        className="vacancies-company-search"
+                        inputRef={companyInputRef}
                       />
-                      {showCompanySuggestions && companySuggestions.length > 0 && (
-                        <div className="vacancies-company-suggestions">
-                          {companySuggestions.map((company) => (
-                            <button
-                              key={company.id}
-                              type="button"
-                              onClick={() => handleCompanySelect(company)}
-                              className="vacancies-company-suggestion"
-                            >
-                              {company.name}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                     </div>
                     {selectedCompanyName && (
                       <div className="vacancies-company-selected">

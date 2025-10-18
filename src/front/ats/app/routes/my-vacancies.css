@@ -653,6 +653,24 @@
   background-color: #6b7280;
 }
 
+.vacancies-card-button.close {
+  background-color: #dc2626;
+  color: white;
+}
+
+.vacancies-card-button.close:hover {
+  background-color: #b91c1c;
+}
+
+.vacancies-card-button.reopen {
+  background-color: #059669;
+  color: white;
+}
+
+.vacancies-card-button.reopen:hover {
+  background-color: #047857;
+}
+
 /* Responsive design */
 @media (max-width: 1024px) {
   .vacancies-grid {

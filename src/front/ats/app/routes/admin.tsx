@@ -10,7 +10,7 @@ interface Vacancy {
   title: string;
   description: string;
   requirements: string;
-  status: "Active" | "Closed" | "On Review";
+  status: "ACTIVE" | "CLOSED" | "ON_REVIEW";
   company_name: string;
   created_at: string;
   expires_at?: string;
@@ -35,7 +35,7 @@ export default function Admin() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
-  const [filterStatus, setFilterStatus] = useState<"all" | "On Review" | "Active" | "Closed">("On Review");
+  const [filterStatus, setFilterStatus] = useState<"all" | "ON_REVIEW" | "ACTIVE" | "CLOSED">("ON_REVIEW");
   const [isUpdating, setIsUpdating] = useState<number | null>(null);
   const [editingVacancy, setEditingVacancy] = useState<Vacancy | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -88,7 +88,7 @@ export default function Admin() {
     }
   };
 
-  const updateVacancyStatus = async (vacancyId: number, newStatus: "Active" | "Closed") => {
+  const updateVacancyStatus = async (vacancyId: number, newStatus: "ACTIVE" | "CLOSED") => {
     setIsUpdating(vacancyId);
     try {
       const response = await fetch(getApiUrl(`/api/v1/ats/admin/vacancies/${vacancyId}/status`), {
@@ -224,11 +224,11 @@ export default function Admin() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active":
+      case "ACTIVE":
         return "admin-status-active";
-      case "Closed":
+      case "CLOSED":
         return "admin-status-closed";
-      case "On Review":
+      case "ON_REVIEW":
         return "admin-status-review";
       default:
         return "admin-status-default";
@@ -237,11 +237,11 @@ export default function Admin() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "Active":
+      case "ACTIVE":
         return "Активная";
-      case "Closed":
+      case "CLOSED":
         return "Закрыта";
-      case "On Review":
+      case "ON_REVIEW":
         return "На модерации";
       default:
         return status;
@@ -272,15 +272,15 @@ export default function Admin() {
             </div>
             <div className="admin-stats">
               <div className="admin-stat-card">
-                <span className="admin-stat-number">{vacancies.filter(v => v.status === "On Review").length}</span>
+                <span className="admin-stat-number">{vacancies.filter(v => v.status === "ON_REVIEW").length}</span>
                 <span className="admin-stat-label">На модерации</span>
               </div>
               <div className="admin-stat-card">
-                <span className="admin-stat-number">{vacancies.filter(v => v.status === "Active").length}</span>
+                <span className="admin-stat-number">{vacancies.filter(v => v.status === "ACTIVE").length}</span>
                 <span className="admin-stat-label">Активные</span>
               </div>
               <div className="admin-stat-card">
-                <span className="admin-stat-number">{vacancies.filter(v => v.status === "Closed").length}</span>
+                <span className="admin-stat-number">{vacancies.filter(v => v.status === "CLOSED").length}</span>
                 <span className="admin-stat-label">Закрытые</span>
               </div>
             </div>
@@ -292,13 +292,13 @@ export default function Admin() {
               <label className="admin-filter-label">Фильтр по статусу:</label>
               <select 
                 value={filterStatus} 
-                onChange={(e) => setFilterStatus(e.target.value as any)}
+                onChange={(e) => setFilterStatus(e.target.value as "all" | "ON_REVIEW" | "ACTIVE" | "CLOSED")}
                 className="admin-filter-select"
               >
                 <option value="all">Все вакансии</option>
-                <option value="On Review">На модерации</option>
-                <option value="Active">Активные</option>
-                <option value="Closed">Закрытые</option>
+                <option value="ON_REVIEW">На модерации</option>
+                <option value="ACTIVE">Активные</option>
+                <option value="CLOSED">Закрытые</option>
               </select>
             </div>
           </div>
@@ -358,17 +358,17 @@ export default function Admin() {
                         Редактировать
                       </button>
                       
-                      {vacancy.status === "On Review" && (
+                      {vacancy.status === "ON_REVIEW" && (
                         <>
                           <button
-                            onClick={() => updateVacancyStatus(vacancy.id, "Active")}
+                            onClick={() => updateVacancyStatus(vacancy.id, "ACTIVE")}
                             disabled={isUpdating === vacancy.id}
                             className="admin-action-button admin-action-approve"
                           >
                             {isUpdating === vacancy.id ? "Обновление..." : "Одобрить"}
                           </button>
                           <button
-                            onClick={() => updateVacancyStatus(vacancy.id, "Closed")}
+                            onClick={() => updateVacancyStatus(vacancy.id, "CLOSED")}
                             disabled={isUpdating === vacancy.id}
                             className="admin-action-button admin-action-reject"
                           >
@@ -377,9 +377,9 @@ export default function Admin() {
                         </>
                       )}
 
-                      {vacancy.status === "Active" && (
+                      {vacancy.status === "ACTIVE" && (
                         <button
-                          onClick={() => updateVacancyStatus(vacancy.id, "Closed")}
+                          onClick={() => updateVacancyStatus(vacancy.id, "CLOSED")}
                           disabled={isUpdating === vacancy.id}
                           className="admin-action-button admin-action-close"
                         >
@@ -387,9 +387,9 @@ export default function Admin() {
                         </button>
                       )}
 
-                      {vacancy.status === "Closed" && (
+                      {vacancy.status === "CLOSED" && (
                         <button
-                          onClick={() => updateVacancyStatus(vacancy.id, "Active")}
+                          onClick={() => updateVacancyStatus(vacancy.id, "ACTIVE")}
                           disabled={isUpdating === vacancy.id}
                           className="admin-action-button admin-action-reopen"
                         >

@@ -400,6 +400,40 @@ export default function MyVacancies() {
     }
   };
 
+  const updateVacancyStatus = async (vacancyId: number, newStatus: string) => {
+    try {
+      const response = await fetch(getApiUrl(`/api/v1/ats/hr/vacancies/${vacancyId}/status`), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          status: newStatus
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Update local state
+        setVacancies(prev => 
+          prev.map(vacancy => 
+            vacancy.id === vacancyId 
+              ? { ...vacancy, status: result.status }
+              : vacancy
+          )
+        );
+        showSuccess("Статус обновлен", result.message);
+      } else {
+        const errorData = await response.json();
+        showError("Ошибка обновления статуса", errorData.detail || "Не удалось обновить статус вакансии");
+      }
+    } catch (error) {
+      console.error("Error updating vacancy status:", error);
+      showError("Ошибка соединения", "Не удалось подключиться к серверу");
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":
@@ -708,6 +742,30 @@ export default function MyVacancies() {
                   >
                     Редактировать
                   </button>
+                  {vacancy.status === "ACTIVE" && (
+                    <button 
+                      onClick={() => updateVacancyStatus(vacancy.id, "CLOSED")}
+                      className="vacancies-card-button close"
+                    >
+                      Закрыть
+                    </button>
+                  )}
+                  {vacancy.status === "CLOSED" && (
+                    <button 
+                      onClick={() => updateVacancyStatus(vacancy.id, "ON_REVIEW")}
+                      className="vacancies-card-button reopen"
+                    >
+                      Открыть
+                    </button>
+                  )}
+                  {vacancy.status === "ON_REVIEW" && (
+                    <button 
+                      onClick={() => updateVacancyStatus(vacancy.id, "CLOSED")}
+                      className="vacancies-card-button close"
+                    >
+                      Закрыть
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

@@ -1,6 +1,6 @@
 import type { Route } from "./+types/funnel";
 import { useNavigate } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getApiUrl } from "../utils/api";
 import { Navbar } from "../components/Navbar";
 import "./funnel.css";
@@ -21,6 +21,12 @@ interface UserInfo {
 }
 
 interface VacancyInfo {
+  id: number;
+  title: string;
+  company_name: string;
+}
+
+interface VacancyOption {
   id: number;
   title: string;
   company_name: string;
@@ -62,14 +68,81 @@ const STATUS_COLORS: Record<string, string> = {
 export default function Funnel() {
   const navigate = useNavigate();
   const [responds, setResponds] = useState<EmployeeRespond[]>([]);
+  const [vacancies, setVacancies] = useState<VacancyOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // Filters
   const [statusFilter, setStatusFilter] = useState("");
-  const [vacancyFilter, setVacancyFilter] = useState("");
-  const [companyFilter, setCompanyFilter] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedVacancyIds, setSelectedVacancyIds] = useState<number[]>([]);
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
+  const [vacancySearchTerm, setVacancySearchTerm] = useState("");
+  const [isVacancySearchOpen, setIsVacancySearchOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const updateRespondStatus = async (respondId: number, newStatus: string) => {
+    try {
+      setUpdatingStatus(respondId);
+      setError(null);
+      
+      const response = await fetch(getApiUrl("/api/v1/ats/hr/responds/status"), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          respond_id: respondId,
+          status: newStatus,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update the respond in the local state
+        setResponds(prevResponds => 
+          prevResponds.map(respond => 
+            respond.id === respondId 
+              ? { ...respond, status: newStatus }
+              : respond
+          )
+        );
+        console.log("Status updated:", data.message);
+      } else if (response.status === 401) {
+        navigate("/login");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.detail || "Ошибка обновления статуса");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      setError("Ошибка обновления статуса");
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
+  const fetchVacancies = async () => {
+    try {
+      const response = await fetch(getApiUrl("/api/v1/ats/hr/vacancies"), {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setVacancies(data);
+      } else if (response.status === 401) {
+        navigate("/login");
+      } else {
+        console.error("Error fetching vacancies");
+      }
+    } catch (error) {
+      console.error("Error fetching vacancies:", error);
+    }
+  };
 
   const fetchResponds = async () => {
     try {
@@ -78,8 +151,9 @@ export default function Funnel() {
       
       const params = new URLSearchParams();
       if (statusFilter) params.append("status", statusFilter);
-      if (vacancyFilter) params.append("vacancy_id", vacancyFilter);
-      if (companyFilter) params.append("company_id", companyFilter);
+      if (selectedVacancyIds.length > 0) {
+        selectedVacancyIds.forEach(id => params.append("vacancy_id", id.toString()));
+      }
       
       const response = await fetch(getApiUrl(`/api/v1/ats/hr/responds?${params.toString()}`), {
         credentials: "include",
@@ -102,20 +176,98 @@ export default function Funnel() {
   };
 
   useEffect(() => {
+    fetchVacancies();
     fetchResponds();
-  }, [statusFilter, vacancyFilter, companyFilter]);
+  }, [statusFilter, selectedVacancyIds]);
 
-  // Filter responds by search term
+  // Handle click outside to close search
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsVacancySearchOpen(false);
+        setHighlightedIndex(-1);
+      }
+    };
+
+    if (isVacancySearchOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isVacancySearchOpen]);
+
+  // Filter responds by user search term (name, email, phone, telegram)
   const filteredResponds = responds.filter(respond => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
+    if (!userSearchTerm) return true;
+    const searchLower = userSearchTerm.toLowerCase();
     return (
       respond.user.name.toLowerCase().includes(searchLower) ||
       respond.user.email.toLowerCase().includes(searchLower) ||
-      respond.vacancy.title.toLowerCase().includes(searchLower) ||
-      respond.vacancy.company_name.toLowerCase().includes(searchLower)
+      (respond.user.phone && respond.user.phone.toLowerCase().includes(searchLower)) ||
+      (respond.user.telegram && respond.user.telegram.toLowerCase().includes(searchLower))
     );
   });
+
+  const addVacancySelection = (vacancyId: number) => {
+    if (!selectedVacancyIds.includes(vacancyId)) {
+      setSelectedVacancyIds(prev => [...prev, vacancyId]);
+    }
+    setVacancySearchTerm("");
+    setIsVacancySearchOpen(false);
+    setHighlightedIndex(-1);
+  };
+
+  const removeVacancySelection = (vacancyId: number) => {
+    setSelectedVacancyIds(prev => prev.filter(id => id !== vacancyId));
+  };
+
+  const getSelectedVacancies = () => {
+    return vacancies.filter(vacancy => selectedVacancyIds.includes(vacancy.id));
+  };
+
+  const getFilteredVacancies = () => {
+    if (!vacancySearchTerm.trim()) return [];
+    
+    const searchLower = vacancySearchTerm.toLowerCase();
+    return vacancies.filter(vacancy => 
+      !selectedVacancyIds.includes(vacancy.id) && (
+        vacancy.title.toLowerCase().includes(searchLower) ||
+        vacancy.company_name.toLowerCase().includes(searchLower)
+      )
+    );
+  };
+
+  const handleVacancySearchChange = (value: string) => {
+    setVacancySearchTerm(value);
+    setIsVacancySearchOpen(value.trim().length > 0);
+    setHighlightedIndex(-1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const filteredVacancies = getFilteredVacancies();
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex(prev => 
+        prev < filteredVacancies.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex(prev => 
+        prev > 0 ? prev - 1 : filteredVacancies.length - 1
+      );
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && highlightedIndex < filteredVacancies.length) {
+        addVacancySelection(filteredVacancies[highlightedIndex].id);
+      }
+    } else if (e.key === 'Escape') {
+      setIsVacancySearchOpen(false);
+      setHighlightedIndex(-1);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("ru-RU", {
@@ -159,39 +311,104 @@ export default function Funnel() {
 
           {/* Filters */}
           <div className="funnel-filters">
-            <div className="funnel-filters-row">
+            <div className="funnel-filters-grid">
               <div className="funnel-filter-group">
                 <label className="funnel-filter-label">Статус</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="funnel-filter-select"
-                >
-                  {STATUS_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="funnel-filter-container">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="funnel-filter-select"
+                  >
+                    {STATUS_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="funnel-filter-group">
-                <label className="funnel-filter-label">Поиск</label>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Поиск по имени, email, вакансии..."
-                  className="funnel-filter-input"
-                />
+                <label className="funnel-filter-label">Вакансии</label>
+                <div className="funnel-multiselect-container" ref={searchRef}>
+                  {/* Selected vacancy chips */}
+                  <div className="funnel-selected-chips">
+                    {getSelectedVacancies().map(vacancy => (
+                      <div key={vacancy.id} className="funnel-chip">
+                        <span className="funnel-chip-text">
+                          {vacancy.title} - {vacancy.company_name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeVacancySelection(vacancy.id)}
+                          className="funnel-chip-remove"
+                          aria-label={`Удалить ${vacancy.title}`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Search input with suggestions */}
+                  <div className="funnel-search-container">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={vacancySearchTerm}
+                      onChange={(e) => handleVacancySearchChange(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      onFocus={() => setIsVacancySearchOpen(vacancySearchTerm.trim().length > 0)}
+                      placeholder="Поиск вакансий..."
+                      className="funnel-search-input"
+                    />
+                    
+                    {isVacancySearchOpen && getFilteredVacancies().length > 0 && (
+                      <div className="funnel-search-suggestions">
+                        {getFilteredVacancies().map((vacancy, index) => (
+                          <div
+                            key={vacancy.id}
+                            className={`funnel-search-suggestion ${
+                              index === highlightedIndex ? 'highlighted' : ''
+                            }`}
+                            onClick={() => addVacancySelection(vacancy.id)}
+                            onMouseEnter={() => setHighlightedIndex(index)}
+                          >
+                            <div className="funnel-suggestion-title">{vacancy.title}</div>
+                            <div className="funnel-suggestion-company">{vacancy.company_name}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <button 
-                onClick={fetchResponds}
-                className="funnel-refresh-button"
-              >
-                Обновить
-              </button>
+              <div className="funnel-filter-group">
+                <label className="funnel-filter-label">Поиск кандидатов</label>
+                <div className="funnel-filter-container">
+                  <input
+                    type="text"
+                    value={userSearchTerm}
+                    onChange={(e) => setUserSearchTerm(e.target.value)}
+                    placeholder="Поиск по имени, email, телефону..."
+                    className="funnel-filter-input"
+                  />
+                </div>
+              </div>
+
+              <div className="funnel-filter-group">
+                <label className="funnel-filter-label">Действия</label>
+                <div className="funnel-filter-container">
+                  <button 
+                    onClick={fetchResponds}
+                    className="funnel-refresh-button"
+                  >
+                    🔄 Обновить
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -244,6 +461,12 @@ export default function Funnel() {
               <div className="funnel-responds-grid">
                 {filteredResponds.map((respond) => (
                   <div key={respond.id} className="funnel-respond-card">
+                    
+                    <div className="funnel-respond-vacancy">
+                      <h4 className="funnel-respond-vacancy-title">{respond.vacancy.title}</h4>
+                      <p className="funnel-respond-company">{respond.vacancy.company_name}</p>
+                    </div>
+             
                     <div className="funnel-respond-header">
                       <div className="funnel-respond-user">
                         <h3 className="funnel-respond-name">{respond.user.name}</h3>
@@ -253,12 +476,7 @@ export default function Funnel() {
                         {STATUS_LABELS[respond.status]}
                       </span>
                     </div>
-                    
-                    <div className="funnel-respond-vacancy">
-                      <h4 className="funnel-respond-vacancy-title">{respond.vacancy.title}</h4>
-                      <p className="funnel-respond-company">{respond.vacancy.company_name}</p>
-                    </div>
-                    
+                                       
                     <div className="funnel-respond-footer">
                       <div className="funnel-respond-contacts">
                         {respond.user.phone && (
@@ -271,6 +489,28 @@ export default function Funnel() {
                       <span className="funnel-respond-date">
                         {formatDate(respond.created_at)}
                       </span>
+                    </div>
+
+                    {/* Status Update Section */}
+                    <div className="funnel-respond-status-update">
+                      <label className="funnel-status-update-label">Изменить статус:</label>
+                      <div className="funnel-status-update-controls">
+                        <select
+                          value={respond.status}
+                          onChange={(e) => updateRespondStatus(respond.id, e.target.value)}
+                          disabled={updatingStatus === respond.id}
+                          className="funnel-status-update-select"
+                        >
+                          {STATUS_OPTIONS.filter(option => option.value !== "").map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        {updatingStatus === respond.id && (
+                          <span className="funnel-status-updating">Обновление...</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

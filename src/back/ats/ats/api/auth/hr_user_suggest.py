@@ -14,9 +14,9 @@ router = APIRouter(tags=["users"])
 class UserSuggestion(BaseModel):
     """Response model for user suggestions"""
     id: int
-    name: str
-    email: str
-    telegram: str = None
+    email: str | None = None
+    name: str | None = None
+    telegram: str | None = None
 
 
 @router.get("/hr/users/suggest", response_model=List[UserSuggestion])

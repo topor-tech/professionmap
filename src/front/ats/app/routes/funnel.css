@@ -390,6 +390,12 @@
   object-fit: contain;
 }
 
+.whatsapp-icon {
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+}
+
 .funnel-respond-date {
   color: #9ca3af;
   font-size: 0.8rem;

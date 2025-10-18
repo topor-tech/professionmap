@@ -394,6 +394,30 @@ export default function Funnel() {
     });
   };
 
+  // Helper function to format phone number for WhatsApp link
+  const formatPhoneForWhatsApp = (phone: string): string => {
+    // Remove all non-digit characters
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    // If the number starts with 8, replace with 7 (Russian format)
+    if (digitsOnly.startsWith('8') && digitsOnly.length === 11) {
+      return '7' + digitsOnly.slice(1);
+    }
+    
+    // If the number starts with +7, remove the +
+    if (digitsOnly.startsWith('7') && digitsOnly.length === 11) {
+      return digitsOnly;
+    }
+    
+    // If the number starts with 7 and has 11 digits, use as is
+    if (digitsOnly.startsWith('7') && digitsOnly.length === 11) {
+      return digitsOnly;
+    }
+    
+    // For other cases, return the digits as is
+    return digitsOnly;
+  };
+
   if (isLoading) {
     return (
       <main className="funnel-loading">
@@ -627,7 +651,14 @@ export default function Funnel() {
                     <div className="funnel-respond-footer">
                       <div className="funnel-respond-contacts">
                         {respond.user.phone && (
-                          <span className="funnel-respond-contact">📞 {respond.user.phone}</span>
+                          <a 
+                            href={`https://wa.me/${formatPhoneForWhatsApp(respond.user.phone)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="funnel-respond-contact whatsapp-link"
+                          >
+                            <img src="/icons8-whatsapp.svg" alt="WhatsApp" className="whatsapp-icon" /> {respond.user.phone}
+                          </a>
                         )}
                         {respond.user.telegram && (
                           <a 

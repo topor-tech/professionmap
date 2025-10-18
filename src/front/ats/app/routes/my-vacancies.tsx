@@ -667,9 +667,6 @@ export default function MyVacancies() {
                   >
                     Редактировать
                   </button>
-                  <button className="vacancies-card-button view">
-                    Просмотр
-                  </button>
                 </div>
               </div>
             ))}

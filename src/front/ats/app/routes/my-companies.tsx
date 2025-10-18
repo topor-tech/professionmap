@@ -60,6 +60,13 @@ export default function MyCompanies() {
   const [showUserSuggestions, setShowUserSuggestions] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserSuggestion | null>(null);
   const [userFormMode, setUserFormMode] = useState<"create" | "add">("create");
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    company_id: 0,
+    name: "",
+    public_description: ""
+  });
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
   useEffect(() => {
     fetchCompanies();
@@ -126,9 +133,59 @@ export default function MyCompanies() {
     }));
   };
 
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleAddUser = (companyId: number) => {
     setSelectedCompanyId(companyId);
     setShowAddUserForm(true);
+  };
+
+  const handleEditCompany = (company: Company) => {
+    setEditFormData({
+      company_id: company.id,
+      name: company.name,
+      public_description: company.public_description || ""
+    });
+    setShowEditForm(true);
+  };
+
+  const handleEditCompanySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingEdit(true);
+
+    try {
+      const response = await fetch(getApiUrl("/api/v1/ats/hr/edit_company"), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(editFormData),
+      });
+
+      if (response.ok) {
+        const updatedCompany = await response.json();
+        setCompanies(companies.map(company => 
+          company.id === updatedCompany.id ? updatedCompany : company
+        ));
+        setShowEditForm(false);
+        showSuccess("Компания обновлена", `Компания "${updatedCompany.name}" успешно обновлена`);
+      } else {
+        const errorData = await response.json();
+        showError("Ошибка обновления", errorData.detail || "Не удалось обновить компанию");
+      }
+    } catch (error) {
+      console.error("Error updating company:", error);
+      showError("Ошибка соединения", "Не удалось подключиться к серверу");
+    } finally {
+      setIsSubmittingEdit(false);
+    }
   };
 
   const handleUserInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -358,6 +415,62 @@ export default function MyCompanies() {
           </div>
         )}
 
+        {/* Edit Company Form Modal */}
+        {showEditForm && (
+          <div className="companies-modal-overlay">
+            <div className="companies-modal">
+              <h2 className="companies-modal-title">Редактировать компанию</h2>
+              <form onSubmit={handleEditCompanySubmit}>
+                <div className="companies-form-group">
+                  <label htmlFor="edit-name" className="companies-form-label">
+                    Название компании *
+                  </label>
+                  <input
+                    type="text"
+                    id="edit-name"
+                    name="name"
+                    value={editFormData.name}
+                    onChange={handleEditInputChange}
+                    required
+                    className="companies-form-input"
+                    placeholder="Введите название компании"
+                  />
+                </div>
+                <div className="companies-form-group">
+                  <label htmlFor="edit-public_description" className="companies-form-label">
+                    Описание компании
+                  </label>
+                  <textarea
+                    id="edit-public_description"
+                    name="public_description"
+                    value={editFormData.public_description}
+                    onChange={handleEditInputChange}
+                    rows={3}
+                    className="companies-form-textarea"
+                    placeholder="Краткое описание компании"
+                  />
+                </div>
+                <div className="companies-form-actions">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditForm(false)}
+                    className="companies-form-button cancel"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingEdit}
+                    className="companies-form-button submit"
+                  >
+                    {isSubmittingEdit ? "Сохранение..." : "Сохранить"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Add User Form Modal */}
         {showAddUserForm && (
           <div className="companies-modal-overlay">
@@ -546,8 +659,8 @@ export default function MyCompanies() {
                 
                 {/* HR Admins Section */}
                 <div className="companies-card-hr-section">
-                  <h4 className="companies-card-hr-title">HR ({company.hr_user.length})</h4>
-                  {company.hr_user.length > 0 ? (
+                  <h4 className="companies-card-hr-title">HR ({company.hr_user?.length || 0})</h4>
+                  {company.hr_user && company.hr_user.length > 0 ? (
                     company.hr_user.map((hrUser) => (
                       <div key={hrUser.id} className="companies-card-hr-user">
                         <div className="companies-card-hr-user-info">
@@ -565,7 +678,10 @@ export default function MyCompanies() {
                 </div>
                 
                 <div className="companies-card-actions">
-                  <button className="companies-card-button manage">
+                  <button 
+                    className="companies-card-button manage"
+                    onClick={() => handleEditCompany(company)}
+                  >
                     Редактировать
                   </button>
                   <button 

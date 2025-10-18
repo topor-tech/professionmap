@@ -47,7 +47,6 @@ async def get_current_user_info(
         select(UserRoleAssociation.role).filter(UserRoleAssociation.user_id == user.id)
     )
     roles = roles_result.scalars().all()
-    roles = [role.role for role in roles]
     return UserJWTTokenInfoResponse(
         id=user.id,
         email=user.email,

@@ -374,12 +374,16 @@
   font-size: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
+  background-color: white;
+  color: #1f2937;
 }
 
 .form-group input:focus {
   outline: none;
   border-color: #dc2626;
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  background-color: white;
+  color: #1f2937;
 }
 
 .form-group input::placeholder {

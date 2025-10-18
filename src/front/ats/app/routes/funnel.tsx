@@ -630,7 +630,14 @@ export default function Funnel() {
                           <span className="funnel-respond-contact">📞 {respond.user.phone}</span>
                         )}
                         {respond.user.telegram && (
-                          <span className="funnel-respond-contact">💬 {respond.user.telegram}</span>
+                          <a 
+                            href={`https://t.me/${respond.user.telegram}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="funnel-respond-contact telegram-link"
+                          >
+                            <span className="telegram-icon">📱</span> {respond.user.telegram}
+                          </a>
                         )}
                       </div>
                       <span className="funnel-respond-date">

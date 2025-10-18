@@ -43,7 +43,7 @@ def get_password_hash(password: str) -> str:
 
 
 
-@router.post("/login")
+@router.post("/auth/login")
 async def login(
     login_data: LoginRequest,
     response: Response,
@@ -138,7 +138,7 @@ async def login(
     )
 
 
-@router.post("/logout")
+@router.post("/auth/logout")
 async def logout(response: Response):
     """
     Logout endpoint that clears the access token cookie.

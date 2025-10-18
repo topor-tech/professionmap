@@ -37,7 +37,7 @@ def check_admin_access(jwt_token_payload: JWTTokenPayload) -> None:
         )
 
 
-@router.get("/users", response_model=List[UserResponse])
+@router.get("/auth/users", response_model=List[UserResponse])
 async def get_users(
     request: Request,
     db: AsyncSession = Depends(get_async_db)

@@ -10,6 +10,8 @@ from ats.api.hr.create_vacancy import router as create_vacancy_router
 from ats.api.hr.get_vacancies import router as get_vacancies_router
 from ats.api.hr.vacancy_stats import router as vacancy_stats_router
 from ats.api.hr.comapny_suggest import router as company_suggest_router
+from ats.api.auth.hr_user_suggest import router as hr_user_suggest_router
+from ats.api.hr.add_user_to_company import router as add_user_to_company_router
 
 router = APIRouter(prefix="/api/v1/ats")
 router.include_router(login_router)
@@ -22,6 +24,8 @@ router.include_router(create_vacancy_router)
 router.include_router(get_vacancies_router)
 router.include_router(vacancy_stats_router)
 router.include_router(company_suggest_router)
+router.include_router(hr_user_suggest_router)
+router.include_router(add_user_to_company_router)
 __all__ = [
     "router",
 ]

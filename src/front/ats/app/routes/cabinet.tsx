@@ -42,7 +42,7 @@ export default function Cabinet() {
     // Fetch user info - the cookie will be automatically included in the request
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch(getApiUrl("/api/v1/ats/user_info"), {
+        const response = await fetch(getApiUrl("/api/v1/ats/auth/user_info"), {
           credentials: "include", // This ensures cookies are sent with the request
         });
 
@@ -69,7 +69,7 @@ export default function Cabinet() {
   const handleLogout = async () => {
     try {
       // Call the backend logout endpoint to clear the cookie
-      await fetch(getApiUrl("/api/v1/ats/logout"), {
+      await fetch(getApiUrl("/api/v1/ats/auth/logout"), {
         method: "POST",
         credentials: "include", // Include cookies in the request
       });

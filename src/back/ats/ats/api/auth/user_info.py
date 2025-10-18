@@ -13,7 +13,7 @@ from ats.libs.jwt import get_current_user_from_token, UserJWTTokenInfoResponse
 router = APIRouter(tags=["user_info"])
         
 
-@router.get("/user_info", response_model=UserJWTTokenInfoResponse)
+@router.get("/auth/user_info", response_model=UserJWTTokenInfoResponse)
 async def get_current_user_info(
     request: Request,
     db: AsyncSession = Depends(get_async_db)

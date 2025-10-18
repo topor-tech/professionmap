@@ -4,11 +4,27 @@ import { useEffect, useState } from "react";
 import { getApiUrl } from "../utils/api";
 import "./my-companies.css";
 
+interface UserInfoResponse {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  telegram: string | null;
+}
+
+interface UserSuggestion {
+  id: number;
+  name: string;
+  email: string;
+  telegram: string | null;
+}
+
 interface Company {
   id: number;
   name: string;
   public_description: string | null;
   created_at: string;
+  hr_user: UserInfoResponse[];
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -28,6 +44,21 @@ export default function MyCompanies() {
     public_description: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAddUserForm, setShowAddUserForm] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+  const [userFormData, setUserFormData] = useState({
+    email: "",
+    name: "",
+    password: "",
+    phone: "",
+    telegram: ""
+  });
+  const [isSubmittingUser, setIsSubmittingUser] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [userSuggestions, setUserSuggestions] = useState<UserSuggestion[]>([]);
+  const [showUserSuggestions, setShowUserSuggestions] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserSuggestion | null>(null);
+  const [userFormMode, setUserFormMode] = useState<"create" | "add">("create");
 
   useEffect(() => {
     fetchCompanies();
@@ -91,6 +122,146 @@ export default function MyCompanies() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleAddUser = (companyId: number) => {
+    setSelectedCompanyId(companyId);
+    setShowAddUserForm(true);
+  };
+
+  const handleUserInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setUserFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const searchUsers = async (query: string) => {
+    if (query.length < 2) {
+      setUserSuggestions([]);
+      setShowUserSuggestions(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        getApiUrl(`/api/v1/ats/hr/users/suggest?q=${encodeURIComponent(query)}&limit=10`),
+        {
+          credentials: "include",
+        }
+      );
+
+      if (response.ok) {
+        const suggestions = await response.json();
+        setUserSuggestions(suggestions);
+        setShowUserSuggestions(true);
+      } else {
+        console.error("Error searching users:", response.statusText);
+        setUserSuggestions([]);
+        setShowUserSuggestions(false);
+      }
+    } catch (error) {
+      console.error("Error searching users:", error);
+      setUserSuggestions([]);
+      setShowUserSuggestions(false);
+    }
+  };
+
+  const handleUserSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setUserSearchQuery(query);
+    searchUsers(query);
+  };
+
+  const selectUser = (user: UserSuggestion) => {
+    setSelectedUser(user);
+    setUserSearchQuery(`${user.name} (${user.email})`);
+    setShowUserSuggestions(false);
+    setUserFormMode("add");
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingUser(true);
+
+    try {
+      if (userFormMode === "add" && selectedUser && selectedCompanyId) {
+        // Add existing user to company
+        const response = await fetch(getApiUrl("/api/v1/ats/hr/companies/add_user"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            user_id: selectedUser.id,
+            company_id: selectedCompanyId
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          alert(result.message);
+          setUserFormData({
+            email: "",
+            name: "",
+            password: "",
+            phone: "",
+            telegram: ""
+          });
+          setUserSearchQuery("");
+          setSelectedUser(null);
+          setShowAddUserForm(false);
+          setSelectedCompanyId(null);
+          setUserFormMode("create");
+          fetchCompanies(); // Refresh companies list
+        } else {
+          const errorData = await response.json();
+          alert(`Ошибка добавления пользователя: ${errorData.detail || "Неизвестная ошибка"}`);
+        }
+      } else {
+        // Create new user
+        const response = await fetch(getApiUrl("/api/v1/ats/auth/create_user"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            ...userFormData,
+            roles: ["hr"],
+            company_id: selectedCompanyId
+          }),
+        });
+
+        if (response.ok) {
+          const newUser = await response.json();
+          alert(`Пользователь ${newUser.name} успешно создан с ролью HR`);
+          setUserFormData({
+            email: "",
+            name: "",
+            password: "",
+            phone: "",
+            telegram: ""
+          });
+          setUserSearchQuery("");
+          setSelectedUser(null);
+          setShowAddUserForm(false);
+          setSelectedCompanyId(null);
+          setUserFormMode("create");
+          fetchCompanies(); // Refresh companies list
+        } else {
+          const errorData = await response.json();
+          alert(`Ошибка создания пользователя: ${errorData.detail || "Неизвестная ошибка"}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error handling user:", error);
+      alert("Ошибка при обработке пользователя");
+    } finally {
+      setIsSubmittingUser(false);
+    }
   };
 
   if (isLoading) {
@@ -185,6 +356,180 @@ export default function MyCompanies() {
           </div>
         )}
 
+        {/* Add User Form Modal */}
+        {showAddUserForm && (
+          <div className="companies-modal-overlay">
+            <div className="companies-modal">
+              <h2 className="companies-modal-title">Добавить коллегу с ролью HR</h2>
+              
+              {/* User Search Section */}
+              <div className="companies-form-group">
+                <label htmlFor="user-search" className="companies-form-label">
+                  Поиск существующего пользователя
+                </label>
+                <div className="companies-user-search-container">
+                  <input
+                    type="text"
+                    id="user-search"
+                    value={userSearchQuery}
+                    onChange={handleUserSearchChange}
+                    className="companies-form-input"
+                    placeholder="Введите имя, email или telegram для поиска"
+                  />
+                  {showUserSuggestions && userSuggestions.length > 0 && (
+                    <div className="companies-user-suggestions">
+                      {userSuggestions.map((user) => (
+                        <div
+                          key={user.id}
+                          className="companies-user-suggestion"
+                          onClick={() => selectUser(user)}
+                        >
+                          <div className="companies-user-suggestion-name">{user.name}</div>
+                          <div className="companies-user-suggestion-email">{user.email}</div>
+                          {user.telegram && (
+                            <div className="companies-user-suggestion-telegram">@{user.telegram}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {userFormMode === "add" && selectedUser && (
+                <div className="companies-selected-user">
+                  <p>Выбран пользователь: <strong>{selectedUser.name}</strong> ({selectedUser.email})</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setUserSearchQuery("");
+                      setUserFormMode("create");
+                    }}
+                    className="companies-form-button cancel"
+                  >
+                    Выбрать другого
+                  </button>
+                </div>
+              )}
+
+              <form onSubmit={handleCreateUser}>
+                {userFormMode === "create" && (
+                  <>
+                    <div className="companies-form-group">
+                      <label htmlFor="user-email" className="companies-form-label">
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        id="user-email"
+                        name="email"
+                        value={userFormData.email}
+                        onChange={handleUserInputChange}
+                        required
+                        className="companies-form-input"
+                        placeholder="Введите email коллеги"
+                      />
+                    </div>
+                    <div className="companies-form-group">
+                      <label htmlFor="user-name" className="companies-form-label">
+                        Имя *
+                      </label>
+                      <input
+                        type="text"
+                        id="user-name"
+                        name="name"
+                        value={userFormData.name}
+                        onChange={handleUserInputChange}
+                        required
+                        className="companies-form-input"
+                        placeholder="Введите имя коллеги"
+                      />
+                    </div>
+                    <div className="companies-form-group">
+                      <label htmlFor="user-password" className="companies-form-label">
+                        Пароль *
+                      </label>
+                      <input
+                        type="password"
+                        id="user-password"
+                        name="password"
+                        value={userFormData.password}
+                        onChange={handleUserInputChange}
+                        required
+                        className="companies-form-input"
+                        placeholder="Введите пароль для коллеги"
+                      />
+                    </div>
+                    <div className="companies-form-group">
+                      <label htmlFor="user-phone" className="companies-form-label">
+                        Телефон
+                      </label>
+                      <input
+                        type="tel"
+                        id="user-phone"
+                        name="phone"
+                        value={userFormData.phone}
+                        onChange={handleUserInputChange}
+                        className="companies-form-input"
+                        placeholder="Введите телефон коллеги"
+                      />
+                    </div>
+                    <div className="companies-form-group">
+                      <label htmlFor="user-telegram" className="companies-form-label">
+                        Telegram
+                      </label>
+                      <input
+                        type="text"
+                        id="user-telegram"
+                        name="telegram"
+                        value={userFormData.telegram}
+                        onChange={handleUserInputChange}
+                        className="companies-form-input"
+                        placeholder="Введите Telegram коллеги"
+                      />
+                    </div>
+                  </>
+                )}
+                <div className="companies-form-actions">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddUserForm(false);
+                      setSelectedCompanyId(null);
+                      setUserFormData({
+                        email: "",
+                        name: "",
+                        password: "",
+                        phone: "",
+                        telegram: ""
+                      });
+                      setUserSearchQuery("");
+                      setSelectedUser(null);
+                      setUserFormMode("create");
+                      setShowUserSuggestions(false);
+                      setUserSuggestions([]);
+                    }}
+                    className="companies-form-button cancel"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingUser}
+                    className="companies-form-button submit"
+                  >
+                    {isSubmittingUser 
+                      ? (userFormMode === "add" ? "Добавление..." : "Создание...") 
+                      : (userFormMode === "add" ? "Добавить" : "Создать")
+                    }
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Companies List */}
         {companies.length === 0 ? (
           <div className="companies-empty">
@@ -211,12 +556,38 @@ export default function MyCompanies() {
                 {company.public_description && (
                   <p className="companies-card-description">{company.public_description}</p>
                 )}
+                
+                {/* HR Admins Section */}
+                <div className="companies-card-hr-section">
+                  <h4 className="companies-card-hr-title">HR ({company.hr_user.length})</h4>
+                  {company.hr_user.length > 0 ? (
+                    <div className="companies-card-hr-list">
+                      {company.hr_user.map((hrUser) => (
+                        <div key={hrUser.id} className="companies-card-hr-user">
+                          <div className="companies-card-hr-user-info">
+                            <span className="companies-card-hr-user-name">{hrUser.name}</span>
+                            <span className="companies-card-hr-user-email">{hrUser.email}</span>
+                          </div>
+                          {hrUser.telegram && (
+                            <span className="companies-card-hr-user-telegram">@{hrUser.telegram}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="companies-card-hr-empty">Нет HR</p>
+                  )}
+                </div>
+                
                 <div className="companies-card-actions">
                   <button className="companies-card-button manage">
-                    Управление
+                    Редактировать
                   </button>
-                  <button className="companies-card-button settings">
-                    Настройки
+                  <button 
+                    className="companies-card-button settings"
+                    onClick={() => handleAddUser(company.id)}
+                  >
+                    Добавить коллегу
                   </button>
                 </div>
               </div>

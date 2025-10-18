@@ -5,12 +5,12 @@ from datetime import datetime, timedelta
 import bcrypt
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import or_
+from sqlalchemy import or_, false
 from sqlalchemy import select
 
 from ats.database import get_async_db
 from ats.config import settings
-from ats.orm.user import User, UserRole, UserRoleAssociation
+from ats.orm import User, UserRole, UserRoleAssociation, HRToCompanyAccess, Company
 from ats.libs.jwt import get_current_user_from_token
 
 router = APIRouter(tags=["users"])
@@ -24,6 +24,7 @@ class CreateUserRequest(BaseModel):
     name: str
     password: str
     roles: List[UserRole]
+    company_id: Optional[int] = None
 
 
 class CreateUserResponse(BaseModel):
@@ -43,7 +44,7 @@ def get_password_hash(password: str) -> str:
 
 
 
-@router.post("/create_user", response_model=CreateUserResponse)
+@router.post("/auth/create_user", response_model=CreateUserResponse)
 async def create_user(
     user_data: CreateUserRequest,
     request: Request,
@@ -61,8 +62,8 @@ async def create_user(
         select(User).filter(
             or_(
                 User.email == user_data.email, 
-                User.phone == user_data.phone, 
-                User.telegram == user_data.telegram,
+                User.phone == user_data.phone if user_data.phone else false(), 
+                User.telegram == user_data.telegram if user_data.telegram else false(),
             )
         )
     )
@@ -97,6 +98,30 @@ async def create_user(
             db.add(role_association)
             created_roles.append(role)
     
+
+    if user_data.company_id:
+        current_user_has_access = False
+        if UserRole.SUPERUSER.value in current_user.roles or UserRole.ADMIN.value in current_user.roles:
+            current_user_has_access = True
+        else:
+            result = await db.execute(
+                select(HRToCompanyAccess).filter(
+                    HRToCompanyAccess.user_id == current_user.id,
+                    HRToCompanyAccess.company_id == user_data.company_id
+                )
+            )
+            hr_access = result.scalar_one_or_none()
+            if hr_access:
+                current_user_has_access = True
+
+        if current_user_has_access:
+            hr_access = HRToCompanyAccess(
+                user_id=new_user.id,
+                company_id=user_data.company_id
+            )
+            db.add(hr_access)
+
+
     await db.commit()
     await db.refresh(new_user)
     

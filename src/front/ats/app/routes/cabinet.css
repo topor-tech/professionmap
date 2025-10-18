@@ -75,7 +75,8 @@
 }
 
 .cabinet-stats-card {
-  background-color: #1f2937;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 1.5rem;
 }
@@ -127,18 +128,20 @@
 }
 
 .cabinet-action-button {
-  background-color: #1f2937;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 1.5rem;
   text-align: left;
   transition: background-color 0.2s;
-  border: none;
   cursor: pointer;
   width: 100%;
+  color: var(--color-text-primary);
 }
 
 .cabinet-action-button:hover {
-  background-color: #374151;
+  background-color: var(--color-background);
+  border-color: var(--color-accent);
 }
 
 .cabinet-action-title {
@@ -163,11 +166,13 @@
 }
 
 .cabinet-activity-empty {
-  background-color: #1f2937;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 1.5rem;
   text-align: center;
   opacity: 0.7;
+  color: var(--color-text-secondary);
 }
 
 /* Responsive design */

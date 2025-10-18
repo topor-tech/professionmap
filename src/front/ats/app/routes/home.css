@@ -55,6 +55,8 @@
   color: white;
   text-decoration: none;
   display: inline-block;
+  border: none;
+  cursor: pointer;
 }
 
 .home-login-button:hover {

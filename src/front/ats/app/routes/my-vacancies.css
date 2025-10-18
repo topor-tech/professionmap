@@ -117,47 +117,127 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  min-height: 2.5rem;
+  align-items: center;
 }
 
 .vacancies-filter-chip {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.75rem;
-  background-color: #2563eb;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
   color: white;
-  border-radius: 0.5rem;
+  border-radius: 1rem;
   font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vacancies-filter-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .vacancies-filter-chip-remove {
-  margin-left: 0.25rem;
-  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
   border: none;
-  background: none;
+  background: rgba(255, 255, 255, 0.2);
   color: white;
   cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: bold;
 }
 
 .vacancies-filter-chip-remove:hover {
-  background-color: #1d4ed8;
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
 }
 
 .vacancies-filter-clear {
-  padding: 0.25rem 0.5rem;
-  background-color: #4b5563;
-  color: white;
-  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  border-radius: 0.5rem;
   font-size: 0.875rem;
-  transition: background-color 0.2s;
-  border: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .vacancies-filter-clear:hover {
-  background-color: #6b7280;
+  background-color: var(--color-surface);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.vacancies-filter-clear::before {
+  content: "🗑️";
+  font-size: 0.75rem;
+}
+
+/* Empty chips state */
+.vacancies-filter-chips:empty::before {
+  content: "Выберите компании для фильтрации";
+  color: var(--color-text-secondary);
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+/* Chip animations */
+@keyframes chipSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.vacancies-filter-chip {
+  animation: chipSlideIn 0.2s ease-out;
+}
+
+/* Responsive chip layout */
+@media (max-width: 768px) {
+  .vacancies-filter-chips {
+    padding: 0.375rem;
+    gap: 0.375rem;
+  }
+  
+  .vacancies-filter-chip {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+  
+  .vacancies-filter-chip-remove {
+    width: 1rem;
+    height: 1rem;
+    font-size: 0.6875rem;
+  }
+  
+  .vacancies-filter-clear {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+  }
 }
 
 .vacancies-filter-input-wrapper {
@@ -167,8 +247,8 @@
 .vacancies-filter-input {
   width: 100%;
   padding: 0.75rem;
-  background-color: #374151;
-  border: 1px solid #4b5563;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   color: var(--color-text-primary);
   transition: border-color 0.2s;
@@ -176,7 +256,7 @@
 
 .vacancies-filter-input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-accent);
 }
 
 .vacancies-filter-suggestions {
@@ -184,8 +264,8 @@
   top: 100%;
   left: 0;
   right: 0;
-  background-color: #1f2937;
-  border: 1px solid #4b5563;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   margin-top: 0.25rem;
   max-height: 12rem;
@@ -205,7 +285,7 @@
 }
 
 .vacancies-filter-suggestion:hover {
-  background-color: #374151;
+  background-color: var(--color-background);
 }
 
 /* Modal styles */
@@ -223,7 +303,8 @@
 }
 
 .vacancies-modal {
-  background-color: #1f2937;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 1.5rem;
   width: 100%;
@@ -260,8 +341,8 @@
 .vacancies-form-input {
   width: 100%;
   padding: 0.75rem;
-  background-color: #374151;
-  border: 1px solid #4b5563;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   color: var(--color-text-primary);
   transition: border-color 0.2s;
@@ -269,14 +350,14 @@
 
 .vacancies-form-input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-accent);
 }
 
 .vacancies-form-textarea {
   width: 100%;
   padding: 0.75rem;
-  background-color: #374151;
-  border: 1px solid #4b5563;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   color: var(--color-text-primary);
   transition: border-color 0.2s;
@@ -285,7 +366,7 @@
 
 .vacancies-form-textarea:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-accent);
 }
 
 .vacancies-form-actions {
@@ -304,12 +385,14 @@
 }
 
 .vacancies-form-button.cancel {
-  background-color: #4b5563;
-  color: white;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
 }
 
 .vacancies-form-button.cancel:hover {
-  background-color: #6b7280;
+  background-color: var(--color-surface);
+  border-color: var(--color-accent);
 }
 
 .vacancies-form-button.submit {
@@ -336,8 +419,8 @@
   top: 100%;
   left: 0;
   right: 0;
-  background-color: #1f2937;
-  border: 1px solid #4b5563;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   margin-top: 0.25rem;
   max-height: 12rem;
@@ -357,7 +440,7 @@
 }
 
 .vacancies-company-suggestion:hover {
-  background-color: #374151;
+  background-color: var(--color-background);
 }
 
 .vacancies-company-selected {
@@ -411,14 +494,16 @@
 }
 
 .vacancies-card {
-  background-color: #1f2937;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 1.5rem;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .vacancies-card:hover {
-  background-color: #374151;
+  background-color: var(--color-background);
+  border-color: var(--color-accent);
 }
 
 .vacancies-card-header {

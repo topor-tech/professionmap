@@ -548,19 +548,17 @@ export default function MyCompanies() {
                 <div className="companies-card-hr-section">
                   <h4 className="companies-card-hr-title">HR ({company.hr_user.length})</h4>
                   {company.hr_user.length > 0 ? (
-                    <div className="companies-card-hr-list">
-                      {company.hr_user.map((hrUser) => (
-                        <div key={hrUser.id} className="companies-card-hr-user">
-                          <div className="companies-card-hr-user-info">
-                            <span className="companies-card-hr-user-name">{hrUser.name}</span>
-                            <span className="companies-card-hr-user-email">{hrUser.email}</span>
-                          </div>
-                          {hrUser.telegram && (
-                            <span className="companies-card-hr-user-telegram">@{hrUser.telegram}</span>
-                          )}
+                    company.hr_user.map((hrUser) => (
+                      <div key={hrUser.id} className="companies-card-hr-user">
+                        <div className="companies-card-hr-user-info">
+                          <span className="companies-card-hr-user-name">{hrUser.name}</span>
+                          <span className="companies-card-hr-user-email">{hrUser.email}</span>
                         </div>
-                      ))}
-                    </div>
+                        {hrUser.telegram && (
+                          <span className="companies-card-hr-user-telegram">@{hrUser.telegram}</span>
+                        )}
+                      </div>
+                    ))
                   ) : (
                     <p className="companies-card-hr-empty">Нет HR</p>
                   )}

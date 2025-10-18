@@ -387,10 +387,6 @@
 .telegram-icon {
   width: 16px;
   height: 16px;
-  background-color: #0088cc;
-  border-radius: 3px;
-  padding: 2px;
-  filter: brightness(0) invert(1);
   object-fit: contain;
 }
 

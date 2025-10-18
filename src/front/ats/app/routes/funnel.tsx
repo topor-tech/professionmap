@@ -636,7 +636,7 @@ export default function Funnel() {
                             rel="noopener noreferrer"
                             className="funnel-respond-contact telegram-link"
                           >
-                            <img src="/telegram.svg" alt="Telegram" className="telegram-icon" /> {respond.user.telegram}
+                            <img src="/telegram_colored.svg" alt="Telegram" className="telegram-icon" /> {respond.user.telegram}
                           </a>
                         )}
                       </div>

@@ -631,12 +631,12 @@ export default function Funnel() {
                         )}
                         {respond.user.telegram && (
                           <a 
-                            href={`https://t.me/${respond.user.telegram}`}
+                            href={`https://t.me/${respond.user.telegram.startsWith('@') ? respond.user.telegram.slice(1) : respond.user.telegram}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="funnel-respond-contact telegram-link"
                           >
-                            <span className="telegram-icon">📱</span> {respond.user.telegram}
+                            <img src="/telegram.svg" alt="Telegram" className="telegram-icon" /> {respond.user.telegram}
                           </a>
                         )}
                       </div>

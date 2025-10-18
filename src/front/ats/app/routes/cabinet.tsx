@@ -2,6 +2,7 @@ import type { Route } from "./+types/cabinet";
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { getApiUrl } from "../utils/api";
+import { Navbar } from "../components/Navbar";
 import "./cabinet.css";
 
 export function meta({}: Route.MetaArgs) {
@@ -66,20 +67,6 @@ export default function Cabinet() {
     fetchUserInfo();
   }, [navigate]);
 
-  const handleLogout = async () => {
-    try {
-      // Call the backend logout endpoint to clear the cookie
-      await fetch(getApiUrl("/api/v1/ats/auth/logout"), {
-        method: "POST",
-        credentials: "include", // Include cookies in the request
-      });
-    } catch (error) {
-      console.error("Error during logout:", error);
-    } finally {
-      // Navigate to login regardless of logout API call result
-      navigate("/login");
-    }
-  };
 
   if (isLoading) {
     return (
@@ -93,20 +80,16 @@ export default function Cabinet() {
   }
 
   return (
-    <main className="cabinet-container">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <>
+      <Navbar currentPath="/cabinet" />
+      <main className="cabinet-container">
+        <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <header className="cabinet-header">
           <div>
             <h1 className="cabinet-title">Личный кабинет</h1>
             <p className="cabinet-subtitle">Добро пожаловать, {userInfo?.email}</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="cabinet-logout-button"
-          >
-            Выйти
-          </button>
         </header>
 
         {/* Dashboard Content */}
@@ -173,6 +156,7 @@ export default function Cabinet() {
           </div>
         </div>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

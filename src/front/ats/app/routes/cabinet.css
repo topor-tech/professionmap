@@ -54,18 +54,6 @@
   opacity: 0.8;
 }
 
-.cabinet-logout-button {
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  background-color: var(--color-accent);
-  color: white;
-}
-
-.cabinet-logout-button:hover {
-  background-color: var(--color-accent-hover);
-}
 
 .cabinet-dashboard {
   display: grid;

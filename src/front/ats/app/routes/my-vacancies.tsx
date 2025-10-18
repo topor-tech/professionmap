@@ -2,6 +2,7 @@ import type { Route } from "./+types/my-vacancies";
 import { useNavigate } from "react-router";
 import { useEffect, useState, useRef } from "react";
 import { getApiUrl } from "../utils/api";
+import { Navbar } from "../components/Navbar";
 import "./my-vacancies.css";
 import { useToast } from "../components/ToastProvider";
 import { SuggestionDropdown, type SuggestionItem } from "../components/SuggestionDropdown";
@@ -344,8 +345,10 @@ export default function MyVacancies() {
   }
 
   return (
-    <main className="vacancies-container">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <>
+      <Navbar currentPath="/cabinet/my-vacancies" />
+      <main className="vacancies-container">
+        <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <header className="vacancies-header">
           <div>
@@ -591,6 +594,7 @@ export default function MyVacancies() {
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </>
   );
 }

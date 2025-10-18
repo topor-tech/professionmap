@@ -2,6 +2,7 @@ import type { Route } from "./+types/my-companies";
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { getApiUrl } from "../utils/api";
+import { Navbar } from "../components/Navbar";
 import "./my-companies.css";
 import { useToast } from "../components/ToastProvider";
 import { SuggestionDropdown, type SuggestionItem } from "../components/SuggestionDropdown";
@@ -335,8 +336,10 @@ export default function MyCompanies() {
   }
 
   return (
-    <main className="companies-container">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <>
+      <Navbar currentPath="/cabinet/my-companies" />
+      <main className="companies-container">
+        <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <header className="companies-header">
           <div>
@@ -696,6 +699,7 @@ export default function MyCompanies() {
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </>
   );
 }

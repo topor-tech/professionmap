@@ -167,6 +167,8 @@ export default function Funnel() {
               : respond
           )
         );
+        // Refresh stats to reflect the status change
+        fetchStats();
         console.log("Status updated:", data.message);
       } else if (response.status === 401) {
         navigate("/login");
@@ -234,13 +236,16 @@ export default function Funnel() {
 
   const fetchStats = async () => {
     try {
-      if (selectedVacancyIds.length === 0) {
+      // If no vacancies are selected, get stats for all user's vacancies
+      const vacancyIdsToFetch = selectedVacancyIds.length > 0 ? selectedVacancyIds : vacancies.map(v => v.id);
+      
+      if (vacancyIdsToFetch.length === 0) {
         setStats(null);
         return;
       }
 
       const params = new URLSearchParams();
-      selectedVacancyIds.forEach(id => params.append("vacancy_ids", id.toString()));
+      vacancyIdsToFetch.forEach(id => params.append("vacancy_ids", id.toString()));
       
       const response = await fetch(getApiUrl(`/api/v1/ats/hr/responds/stats?${params.toString()}`), {
         credentials: "include",
@@ -253,9 +258,11 @@ export default function Funnel() {
         navigate("/login");
       } else {
         console.error("Error fetching stats");
+        setStats(null);
       }
     } catch (error) {
       console.error("Error fetching stats:", error);
+      setStats(null);
     }
   };
 
@@ -267,8 +274,14 @@ export default function Funnel() {
   useEffect(() => {
     fetchVacancies();
     fetchResponds();
-    fetchStats();
   }, [statusFilter, selectedVacancyIds]);
+
+  // Fetch stats when vacancies are loaded or when selectedVacancyIds change
+  useEffect(() => {
+    if (vacancies.length > 0) {
+      fetchStats();
+    }
+  }, [vacancies, selectedVacancyIds]);
 
   // Handle click outside to close search
   useEffect(() => {
@@ -308,7 +321,7 @@ export default function Funnel() {
   };
 
   const getTotalStats = (): number => {
-    if (!stats) return filteredResponds.length;
+    if (!stats) return responds.length;
     return stats.total_responds;
   };
 

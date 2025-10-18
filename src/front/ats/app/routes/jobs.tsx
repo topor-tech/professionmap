@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Route } from "./+types/jobs";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { getApiUrl } from "../utils/api";
 import "./jobs.css";
 
@@ -18,6 +18,7 @@ interface Vacancy {
 interface Company {
   id: number;
   name: string;
+  public_description: string | null;
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -28,23 +29,81 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Jobs() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCompany, setSelectedCompany] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || "");
+  const [selectedCompanies, setSelectedCompanies] = useState<Company[]>([]);
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'));
   const [totalPages, setTotalPages] = useState(1);
   const [totalVacancies, setTotalVacancies] = useState(0);
+  const [companySearchTerm, setCompanySearchTerm] = useState("");
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   
   const itemsPerPage = 10;
+
+  // Function to update URL with current filters
+  const updateURL = (updates: { search?: string; page?: number; companies?: string }) => {
+    const newParams = new URLSearchParams(searchParams);
+    
+    if (updates.search !== undefined) {
+      if (updates.search) {
+        newParams.set('search', updates.search);
+      } else {
+        newParams.delete('search');
+      }
+    }
+    
+    if (updates.page !== undefined) {
+      if (updates.page > 1) {
+        newParams.set('page', updates.page.toString());
+      } else {
+        newParams.delete('page');
+      }
+    }
+    
+    if (updates.companies !== undefined) {
+      if (updates.companies) {
+        newParams.set('companies', updates.companies);
+      } else {
+        newParams.delete('companies');
+      }
+    }
+    
+    setSearchParams(newParams);
+  };
+
+  // Initialize selected companies from URL params
+  useEffect(() => {
+    const companiesParam = searchParams.get('companies');
+    if (companiesParam) {
+      const companyIds = companiesParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+      if (companyIds.length > 0) {
+        // Store company IDs for later use when companies are loaded
+        const storedCompanyIds = companyIds;
+        
+        // We'll set the companies when the main companies list is loaded
+        const checkAndSetCompanies = () => {
+          if (companies.length > 0) {
+            const validCompanies = companies.filter(c => storedCompanyIds.includes(c.id));
+            setSelectedCompanies(validCompanies);
+          }
+        };
+        
+        checkAndSetCompanies();
+      }
+    }
+  }, [searchParams, companies]);
 
   // Fetch companies for filter dropdown
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await fetch(getApiUrl('/api/v1/ats/hr/companies'));
+        // Use the new companies suggest API with a default search term
+        const response = await fetch(getApiUrl('/api/v1/ats/feed/companies/suggest?q=&limit=4'));
         if (response.ok) {
           const data = await response.json();
           setCompanies(data);
@@ -57,6 +116,34 @@ export default function Jobs() {
     fetchCompanies();
   }, []);
 
+  // Fetch companies based on search term
+  useEffect(() => {
+    const fetchCompaniesBySearch = async () => {
+      if (companySearchTerm.length < 1) {
+        // If search term is empty, fetch all companies
+        const response = await fetch(getApiUrl('/api/v1/ats/feed/companies/suggest?q=&limit=4'));
+        if (response.ok) {
+          const data = await response.json();
+          setCompanies(data);
+        }
+        return;
+      }
+
+      try {
+        const response = await fetch(getApiUrl(`/api/v1/ats/feed/companies/suggest?q=${encodeURIComponent(companySearchTerm)}&limit=4`));
+        if (response.ok) {
+          const data = await response.json();
+          setCompanies(data);
+        }
+      } catch (err) {
+        console.error('Error fetching companies:', err);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchCompaniesBySearch, 300); // Debounce search
+    return () => clearTimeout(timeoutId);
+  }, [companySearchTerm]);
+
   // Fetch vacancies with filters
   useEffect(() => {
     const fetchVacancies = async () => {
@@ -67,8 +154,9 @@ export default function Jobs() {
         const offset = (currentPage - 1) * itemsPerPage;
         let url = `${getApiUrl('/api/v1/ats/feed/vacancies')}?limit=${itemsPerPage}&offset=${offset}`;
         
-        if (selectedCompany) {
-          url += `&company_id=${selectedCompany}`;
+        if (selectedCompanies.length > 0) {
+          const companyIds = selectedCompanies.map(company => company.id).join(',');
+          url += `&company_id=${companyIds}`;
         }
         
         const response = await fetch(url);
@@ -93,7 +181,7 @@ export default function Jobs() {
     };
 
     fetchVacancies();
-  }, [currentPage, selectedCompany]);
+  }, [currentPage, selectedCompanies]);
 
   // Filter vacancies by search term
   const filteredVacancies = vacancies.filter(vacancy => {
@@ -117,25 +205,57 @@ export default function Jobs() {
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+    const value = e.target.value;
+    setSearchTerm(value);
+    updateURL({ search: value, page: 1 });
   };
 
-  const handleCompanyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSelectedCompany(value ? parseInt(value) : null);
-    setCurrentPage(1); // Reset to first page when filter changes
+  const handleCompanySelect = (company: Company) => {
+    if (!selectedCompanies.find(c => c.id === company.id)) {
+      const newSelectedCompanies = [...selectedCompanies, company];
+      setSelectedCompanies(newSelectedCompanies);
+      const companyIds = newSelectedCompanies.map(c => c.id).join(',');
+      updateURL({ companies: companyIds, page: 1 });
+    }
+    setCompanySearchTerm("");
+    setShowCompanyDropdown(false);
+  };
+
+  const handleCompanyRemove = (companyId: number) => {
+    const newSelectedCompanies = selectedCompanies.filter(c => c.id !== companyId);
+    setSelectedCompanies(newSelectedCompanies);
+    const companyIds = newSelectedCompanies.map(c => c.id).join(',');
+    updateURL({ companies: companyIds || undefined, page: 1 });
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    updateURL({ page });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const clearFilters = () => {
     setSearchTerm("");
-    setSelectedCompany(null);
+    setCompanySearchTerm("");
+    setSelectedCompanies([]);
     setCurrentPage(1);
+    updateURL({ search: undefined, companies: undefined, page: 1 });
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.company-search-container')) {
+        setShowCompanyDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <main className="jobs-container">
@@ -164,40 +284,86 @@ export default function Jobs() {
 
           <div className="filters-section">
             <div className="filter-group">
-              <label htmlFor="company-filter" className="filter-label">
+              <label htmlFor="company-search" className="filter-label">
                 Компания:
               </label>
-              <select
-                id="company-filter"
-                value={selectedCompany || ""}
-                onChange={handleCompanyChange}
-                className="company-select"
-              >
-                <option value="">Все компании</option>
-                {companies.map(company => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
-                  </option>
-                ))}
-              </select>
+              <div className="company-search-container">
+                <input
+                  type="text"
+                  id="company-search"
+                  placeholder="Введите название компании..."
+                  value={companySearchTerm}
+                  onChange={(e) => {
+                    setCompanySearchTerm(e.target.value);
+                    setShowCompanyDropdown(true);
+                  }}
+                  onFocus={() => setShowCompanyDropdown(true)}
+                  className="search-input"
+                />
+                {showCompanyDropdown && (
+                  <div className="company-dropdown">
+                    {companies.length > 0 ? (
+                      companies.slice(0, 4).map(company => (
+                        <div
+                          key={company.id}
+                          className="company-option"
+                          onClick={() => handleCompanySelect(company)}
+                        >
+                          <div className="company-option-name">{company.name}</div>
+                          {company.public_description && (
+                            <div className="company-option-description">
+                              {company.public_description}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="company-option no-results">
+                        Компании не найдены
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <button
               onClick={clearFilters}
               className="clear-filters-btn"
             >
-              Очистить фильтры
+              Очистить
             </button>
           </div>
+
+          {/* Selected Companies Chips */}
+          {selectedCompanies.length > 0 && (
+            <div className="selected-companies">
+              <div className="selected-companies-label">Выбранные компании:</div>
+              <div className="company-chips">
+                {selectedCompanies.map(company => (
+                  <div key={company.id} className="company-chip">
+                    <span className="company-chip-name">{company.name}</span>
+                    <button
+                      type="button"
+                      className="company-chip-remove"
+                      onClick={() => handleCompanyRemove(company.id)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Results Summary */}
         <div className="results-summary">
           <p className="results-text">
             Найдено вакансий: {filteredVacancies.length}
-            {selectedCompany && (
+            {selectedCompanies.length > 0 && (
               <span className="filter-info">
-                {" "}(фильтр по компании: {companies.find(c => c.id === selectedCompany)?.name})
+                {" "}(фильтр по компаниям: {selectedCompanies.map(c => c.name).join(", ")})
               </span>
             )}
           </p>
@@ -224,7 +390,7 @@ export default function Jobs() {
         {!loading && !error && filteredVacancies.length === 0 && (
           <div className="no-results-container">
             <p className="no-results-text">
-              {searchTerm || selectedCompany 
+              {searchTerm || selectedCompanies.length > 0
                 ? "По вашему запросу ничего не найдено. Попробуйте изменить параметры поиска."
                 : "Пока нет доступных вакансий"
               }

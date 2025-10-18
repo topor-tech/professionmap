@@ -29,7 +29,7 @@ class PublicVacancyResponse(BaseModel):
 async def get_active_vacancies(
     limit: Optional[int] = Query(50, ge=1, le=100, description="Number of vacancies to return"),
     offset: Optional[int] = Query(0, ge=0, description="Number of vacancies to skip"),
-    company_id: Optional[int] = Query(None, description="Filter by company ID"),
+    company_id: Optional[str] = Query(None, description="Filter by company ID(s), comma-separated for multiple"),
     db: AsyncSession = Depends(get_async_db)
 ):
     """
@@ -51,7 +51,10 @@ async def get_active_vacancies(
     
     # Apply company filter if specified
     if company_id is not None:
-        query = query.filter(Vacancy.company_id == company_id)
+        # Parse comma-separated company IDs
+        company_ids = [int(id.strip()) for id in company_id.split(',') if id.strip()]
+        if company_ids:
+            query = query.filter(Vacancy.company_id.in_(company_ids))
     
     # Apply pagination
     query = query.offset(offset).limit(limit)

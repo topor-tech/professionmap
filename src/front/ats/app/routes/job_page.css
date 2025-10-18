@@ -3,6 +3,7 @@
   min-height: 100vh;
   background-color: #f8fafc;
   color: #1e293b;
+  line-height: 1.6; /* Improve readability */
 }
 
 .job-page-content {
@@ -151,8 +152,8 @@
 }
 
 .section-content {
-  color: #475569;
-  line-height: 1.6;
+  color: #374151; /* Darker color for better contrast */
+  line-height: 1.7; /* Improved line height for readability */
 }
 
 .job-description,
@@ -304,7 +305,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999; /* Highest z-index for modals */
   padding: 1rem;
 }
 

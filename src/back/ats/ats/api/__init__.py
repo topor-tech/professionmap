@@ -18,6 +18,7 @@ from ats.api.admin.get_vacancies import router as admin_get_vacancies_router
 from ats.api.admin.update_vacancy_status import router as admin_update_vacancy_status_router
 from ats.api.feed.get_vacancies import router as feed_get_vacancies_router
 from ats.api.feed.vacancy_info import router as feed_vacancy_info_router
+from ats.api.feed.companies_suggest import router as feed_companies_suggest_router
 from ats.api.candidate.respond_no_login import router as respond_no_login_router
 from ats.api.hr.get_responds import router as get_responds_router
 from ats.api.hr.get_responds_stats import router as get_responds_stats_router
@@ -46,6 +47,7 @@ router.include_router(admin_get_vacancies_router)
 router.include_router(admin_update_vacancy_status_router)
 router.include_router(feed_get_vacancies_router)
 router.include_router(feed_vacancy_info_router)
+router.include_router(feed_companies_suggest_router)
 router.include_router(respond_no_login_router)
 router.include_router(get_responds_router)
 router.include_router(get_responds_stats_router)

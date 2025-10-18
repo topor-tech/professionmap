@@ -157,7 +157,7 @@ export default function Apply() {
                   Найдите интересные вакансии и подайте заявку
                 </p>
                 <button 
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/jobs")}
                   className="apply-empty-button"
                 >
                   Посмотреть вакансии

@@ -1,9 +1,8 @@
 /* Job page styles with light theme */
 .job-page-container {
   min-height: 100vh;
-  background-color: #f8fafc;
-  color: #1e293b;
-  line-height: 1.6; /* Improve readability */
+  background: white;
+  padding: 0;
 }
 
 .job-page-content {
@@ -27,22 +26,23 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: #3b82f6;
+  color: #dc2626;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s;
 }
 
 .back-link:hover {
-  color: #2563eb;
+  color: #b91c1c;
   text-decoration: underline;
 }
 
 /* Job Details */
 .job-details {
   background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -173,7 +173,7 @@
 }
 
 .apply-button {
-  background-color: #3b82f6;
+  background-color: #dc2626;
   color: white;
   border: none;
   padding: 0.75rem 2rem;
@@ -186,13 +186,13 @@
 }
 
 .apply-button:hover {
-  background-color: #2563eb;
+  background-color: #b91c1c;
 }
 
 .share-button {
   background-color: white;
-  color: #3b82f6;
-  border: 2px solid #3b82f6;
+  color: #dc2626;
+  border: 2px solid #dc2626;
   padding: 0.75rem 2rem;
   border-radius: 0.5rem;
   font-weight: 600;
@@ -203,7 +203,7 @@
 }
 
 .share-button:hover {
-  background-color: #3b82f6;
+  background-color: #dc2626;
   color: white;
 }
 
@@ -280,7 +280,7 @@
 }
 
 .job-error .retry-button {
-  background-color: #3b82f6;
+  background-color: #dc2626;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -291,7 +291,7 @@
 }
 
 .job-error .retry-button:hover {
-  background-color: #2563eb;
+  background-color: #b91c1c;
 }
 
 /* Modal Styles */
@@ -378,8 +378,8 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .form-group input::placeholder {
@@ -429,7 +429,7 @@
 }
 
 .submit-button {
-  background-color: #3b82f6;
+  background-color: #dc2626;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -440,7 +440,7 @@
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #2563eb;
+  background-color: #b91c1c;
 }
 
 .submit-button:disabled,
@@ -459,7 +459,7 @@
   width: 2rem;
   height: 2rem;
   border: 2px solid #e2e8f0;
-  border-top: 2px solid #3b82f6;
+  border-top: 2px solid #dc2626;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
@@ -494,7 +494,7 @@
 }
 
 .user-info strong {
-  color: #3b82f6;
+  color: #dc2626;
   font-weight: 600;
 }
 

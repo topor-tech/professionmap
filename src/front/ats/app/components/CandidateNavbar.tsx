@@ -73,8 +73,12 @@ export function CandidateNavbar({ currentPath, allowUnauthenticated = false }: C
     return (
       <nav className="candidate-navbar">
         <div className="candidate-navbar-container">
-          <div className="candidate-navbar-brand">
-            <h1>ProfessionMap ATS</h1>
+          <div 
+            className="candidate-navbar-brand" 
+            onClick={() => navigate("/")}
+            style={{ cursor: "pointer" }}
+          >
+            <h1>ProfessionMap</h1>
           </div>
           <div className="candidate-navbar-user">
             <div className="candidate-navbar-loading">Загрузка...</div>
@@ -87,13 +91,23 @@ export function CandidateNavbar({ currentPath, allowUnauthenticated = false }: C
   return (
     <nav className="candidate-navbar">
       <div className="candidate-navbar-container">
-        <div className="candidate-navbar-brand">
+        <div 
+          className="candidate-navbar-brand" 
+          onClick={() => navigate("/")}
+          style={{ cursor: "pointer" }}
+        >
           <h1>ProfessionMap</h1>
         </div>
         
         {userInfo ? (
           <>
             <div className="candidate-navbar-menu">
+              <button
+                onClick={() => navigate("/jobs")}
+                className={`candidate-navbar-link ${isActivePath("/jobs") ? "active" : ""}`}
+              >
+                Вакансии
+              </button>
               <button
                 onClick={() => navigate("/apply")}
                 className={`candidate-navbar-link ${isActivePath("/apply") ? "active" : ""}`}

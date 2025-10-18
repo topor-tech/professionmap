@@ -52,10 +52,13 @@
 }
 
 .candidate-navbar-link.active {
-  background: #3b82f6;
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  background: none;
+  color: #1e293b;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+  text-decoration-color: #3b82f6;
 }
 
 .candidate-navbar-user {

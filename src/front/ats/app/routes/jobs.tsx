@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import type { Route } from "./+types/jobs";
-import { Link, useSearchParams, useNavigate } from "react-router";
+import { Link, useSearchParams, useNavigate, useLocation } from "react-router";
 import { getApiUrl } from "../utils/api";
 import { useToast } from "../components/ToastProvider";
+import { CandidateNavbar } from "../components/CandidateNavbar";
 import "./jobs.css";
 
 interface Vacancy {
@@ -49,6 +50,7 @@ export function meta({}: Route.MetaArgs) {
 export default function Jobs() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { showSuccess, showError } = useToast();
   
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
@@ -438,8 +440,10 @@ export default function Jobs() {
   }, []);
 
   return (
-    <main className="jobs-container">
-      <div className="jobs-content">
+    <>
+      <CandidateNavbar currentPath={location.pathname} allowUnauthenticated={true} />
+      <main className="jobs-container">
+        <div className="jobs-content">
         <header className="jobs-header">
           <h1 className="jobs-title">Поиск вакансий</h1>
           <p className="jobs-subtitle">
@@ -774,6 +778,7 @@ export default function Jobs() {
           </div>
         </div>
       )}
-    </main>
+      </main>
+    </>
   );
 }

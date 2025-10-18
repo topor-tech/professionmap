@@ -101,7 +101,11 @@ export default function Cabinet() {
         {/* Dashboard Content */}
         <div className="cabinet-dashboard">
           {/* Stats Cards */}
-          <div className="cabinet-stats-card">
+          <div 
+            className="cabinet-stats-card clickable"
+            onClick={() => navigate("/cabinet/my-vacancies?status=ACTIVE")}
+            style={{ cursor: 'pointer' }}
+          >
             <h3 className="cabinet-stats-title">Активные вакансии</h3>
             <p className="cabinet-stats-value active">
               {vacancyStats?.active_vacancies ?? 0}
@@ -109,7 +113,11 @@ export default function Cabinet() {
             <p className="cabinet-stats-subtitle">На модерации: {vacancyStats?.on_review_vacancies ?? 0}</p>
           </div>
 
-          <div className="cabinet-stats-card">
+          <div 
+            className="cabinet-stats-card clickable"
+            onClick={() => navigate("/cabinet/funnel")}
+            style={{ cursor: 'pointer' }}
+          >
             <h3 className="cabinet-stats-title">Кандидаты</h3>
             <p className="cabinet-stats-value candidates">
               {vacancyStats?.total_responds ?? 0}
@@ -119,7 +127,11 @@ export default function Cabinet() {
             </p>
           </div>
 
-          <div className="cabinet-stats-card">
+          <div 
+            className="cabinet-stats-card clickable"
+            onClick={() => navigate("/cabinet/funnel")}
+            style={{ cursor: 'pointer' }}
+          >
             <h3 className="cabinet-stats-title">Интервью</h3>
             <p className="cabinet-stats-value interviews">
               {vacancyStats?.interview_pending_responds ?? 0}

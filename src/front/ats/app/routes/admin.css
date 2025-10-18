@@ -66,6 +66,7 @@
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .admin-stat-card {
@@ -76,6 +77,29 @@
   border-radius: 0.5rem;
   text-align: center;
   min-width: 120px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-stat-card:hover {
+  background-color: var(--color-background);
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.admin-stat-card-active {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
+.admin-stat-card-active .admin-stat-number {
+  color: white;
+}
+
+.admin-stat-card-active .admin-stat-label {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .admin-stat-number {
@@ -356,6 +380,7 @@
   .admin-stat-card {
     flex: 1;
     min-width: auto;
+    max-width: calc(25% - 0.75rem);
   }
 
   .admin-vacancies-grid {

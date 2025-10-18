@@ -1,5 +1,5 @@
 import type { Route } from "./+types/admin";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useEffect, useState } from "react";
 import { getApiUrl } from "../utils/api";
 import { Navbar } from "../components/Navbar";
@@ -32,10 +32,11 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Admin() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
-  const [filterStatus, setFilterStatus] = useState<"all" | "ON_REVIEW" | "ACTIVE" | "CLOSED">("ON_REVIEW");
+  const [filterStatus, setFilterStatus] = useState<"all" | "ON_REVIEW" | "ACTIVE" | "CLOSED">("all");
   const [isUpdating, setIsUpdating] = useState<number | null>(null);
   const [editingVacancy, setEditingVacancy] = useState<Vacancy | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -194,6 +195,14 @@ export default function Admin() {
     }
   };
 
+  // Handle URL parameters on component mount
+  useEffect(() => {
+    const statusParam = searchParams.get('status');
+    if (statusParam && ['all', 'ON_REVIEW', 'ACTIVE', 'CLOSED'].includes(statusParam)) {
+      setFilterStatus(statusParam as "all" | "ON_REVIEW" | "ACTIVE" | "CLOSED");
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     fetchUserInfo();
   }, [navigate]);
@@ -248,6 +257,16 @@ export default function Admin() {
     }
   };
 
+  const handleStatCardClick = (status: "all" | "ON_REVIEW" | "ACTIVE" | "CLOSED") => {
+    setFilterStatus(status);
+    setSearchParams({ status });
+  };
+
+  const handleFilterChange = (status: "all" | "ON_REVIEW" | "ACTIVE" | "CLOSED") => {
+    setFilterStatus(status);
+    setSearchParams({ status });
+  };
+
   if (isLoading) {
     return (
       <main className="admin-loading">
@@ -271,15 +290,31 @@ export default function Admin() {
               <p className="admin-subtitle">Модерация вакансий</p>
             </div>
             <div className="admin-stats">
-              <div className="admin-stat-card">
+              <div 
+                className={`admin-stat-card ${filterStatus === "all" ? "admin-stat-card-active" : ""}`}
+                onClick={() => handleStatCardClick("all")}
+              >
+                <span className="admin-stat-number">{vacancies.length}</span>
+                <span className="admin-stat-label">Все вакансии</span>
+              </div>
+              <div 
+                className={`admin-stat-card ${filterStatus === "ON_REVIEW" ? "admin-stat-card-active" : ""}`}
+                onClick={() => handleStatCardClick("ON_REVIEW")}
+              >
                 <span className="admin-stat-number">{vacancies.filter(v => v.status === "ON_REVIEW").length}</span>
                 <span className="admin-stat-label">На модерации</span>
               </div>
-              <div className="admin-stat-card">
+              <div 
+                className={`admin-stat-card ${filterStatus === "ACTIVE" ? "admin-stat-card-active" : ""}`}
+                onClick={() => handleStatCardClick("ACTIVE")}
+              >
                 <span className="admin-stat-number">{vacancies.filter(v => v.status === "ACTIVE").length}</span>
                 <span className="admin-stat-label">Активные</span>
               </div>
-              <div className="admin-stat-card">
+              <div 
+                className={`admin-stat-card ${filterStatus === "CLOSED" ? "admin-stat-card-active" : ""}`}
+                onClick={() => handleStatCardClick("CLOSED")}
+              >
                 <span className="admin-stat-number">{vacancies.filter(v => v.status === "CLOSED").length}</span>
                 <span className="admin-stat-label">Закрытые</span>
               </div>
@@ -292,7 +327,7 @@ export default function Admin() {
               <label className="admin-filter-label">Фильтр по статусу:</label>
               <select 
                 value={filterStatus} 
-                onChange={(e) => setFilterStatus(e.target.value as "all" | "ON_REVIEW" | "ACTIVE" | "CLOSED")}
+                onChange={(e) => handleFilterChange(e.target.value as "all" | "ON_REVIEW" | "ACTIVE" | "CLOSED")}
                 className="admin-filter-select"
               >
                 <option value="all">Все вакансии</option>

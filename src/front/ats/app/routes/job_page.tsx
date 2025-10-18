@@ -225,9 +225,9 @@ export default function JobPage() {
         {/* Header */}
         <header className="job-page-header">
           <div className="job-page-nav">
-            <a href="https://professionmap.ru/vacancies" target="_blank" rel="noopener noreferrer" className="back-link">
+            <Link to="/jobs" className="back-link">
               ← Назад к списку вакансий
-            </a>
+            </Link>
           </div>
         </header>
 

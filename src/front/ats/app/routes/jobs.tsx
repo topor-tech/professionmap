@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import type { Route } from "./+types/jobs";
-import { Link, useSearchParams } from "react-router";
+import { Link, useSearchParams, useNavigate } from "react-router";
 import { getApiUrl } from "../utils/api";
+import { useToast } from "../components/ToastProvider";
 import "./jobs.css";
 
 interface Vacancy {
@@ -21,6 +22,23 @@ interface Company {
   public_description: string | null;
 }
 
+interface UserInfo {
+  id: number;
+  email: string;
+  name: string;
+  phone?: string;
+  telegram?: string;
+  roles: string[];
+}
+
+interface ApplicationFormData {
+  email: string;
+  phone: string;
+  telegram: string;
+  name: string;
+  password: string;
+}
+
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Поиск вакансий - ProfessionMap ATS" },
@@ -30,6 +48,8 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Jobs() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
   
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -42,6 +62,20 @@ export default function Jobs() {
   const [totalVacancies, setTotalVacancies] = useState(0);
   const [companySearchTerm, setCompanySearchTerm] = useState("");
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+  const [respondingVacancies, setRespondingVacancies] = useState<Set<number>>(new Set());
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVacancyId, setSelectedVacancyId] = useState<number | null>(null);
+  const [formData, setFormData] = useState<ApplicationFormData>({
+    email: '',
+    phone: '',
+    telegram: '',
+    name: '',
+    password: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   
   const itemsPerPage = 10;
 
@@ -97,6 +131,31 @@ export default function Jobs() {
       }
     }
   }, [searchParams, companies]);
+
+  // Check user authentication
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch(getApiUrl("/api/v1/ats/auth/user_info"), {
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserInfo(data);
+        } else {
+          setUserInfo(null);
+        }
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+        setUserInfo(null);
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
 
   // Fetch companies for filter dropdown
   useEffect(() => {
@@ -240,6 +299,127 @@ export default function Jobs() {
     setSelectedCompanies([]);
     setCurrentPage(1);
     updateURL({ search: undefined, companies: undefined, page: 1 });
+  };
+
+  const handleRespondToVacancy = async (vacancyId: number) => {
+    // If user is not authenticated, open modal for registration/response
+    if (!userInfo) {
+      setSelectedVacancyId(vacancyId);
+      setIsModalOpen(true);
+      return;
+    }
+
+    // Check if already responding to this vacancy
+    if (respondingVacancies.has(vacancyId)) {
+      return;
+    }
+
+    // Add to responding set
+    setRespondingVacancies(prev => new Set(prev).add(vacancyId));
+
+    try {
+      const response = await fetch(getApiUrl('/api/v1/ats/candidate/respond'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include authentication cookies
+        body: JSON.stringify({ vacancy_id: vacancyId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        showSuccess("Отклик отправлен", data.message || "Ваш отклик успешно отправлен!");
+      } else {
+        const errorData = await response.json();
+        if (response.status === 401) {
+          showError("Требуется авторизация", "Пожалуйста, войдите в систему для отправки отклика");
+          navigate("/candidate_login");
+        } else if (response.status === 403) {
+          showError("Доступ запрещен", "Для отправки откликов требуется роль кандидата");
+        } else if (response.status === 400) {
+          showError("Ошибка", errorData.detail || "Не удалось отправить отклик");
+        } else {
+          showError("Ошибка", errorData.detail || "Произошла ошибка при отправке отклика");
+        }
+      }
+    } catch (error) {
+      console.error('Error responding to vacancy:', error);
+      showError("Ошибка соединения", "Не удалось подключиться к серверу");
+    } finally {
+      // Remove from responding set
+      setRespondingVacancies(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(vacancyId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedVacancyId) return;
+
+    setIsSubmitting(true);
+    setSubmitMessage(null);
+
+    try {
+      const response = await fetch(getApiUrl('/api/v1/ats/candidate/respond_no_login'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          vacancy_id: selectedVacancyId,
+          email: formData.email,
+          phone: formData.phone || null,
+          telegram: formData.telegram || null,
+          name: formData.name,
+          password: formData.password
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to submit application');
+      }
+
+      const result = await response.json();
+      setSubmitMessage({ type: 'success', text: result.message });
+      
+      // Close modal after successful submission
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setFormData({ email: '', phone: '', telegram: '', name: '', password: '' });
+        setSubmitMessage(null);
+        setSelectedVacancyId(null);
+        showSuccess("Отклик отправлен", result.message || "Ваш отклик успешно отправлен!");
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      setSubmitMessage({ 
+        type: 'error', 
+        text: error instanceof Error ? error.message : 'Failed to submit application' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setFormData({ email: '', phone: '', telegram: '', name: '', password: '' });
+    setSubmitMessage(null);
+    setSelectedVacancyId(null);
   };
 
   // Close dropdown when clicking outside
@@ -447,12 +627,13 @@ export default function Jobs() {
                   >
                     Подробнее
                   </Link>
-                  <Link
-                    to={`/apply?vacancy_id=${vacancy.id}`}
+                  <button
+                    onClick={() => handleRespondToVacancy(vacancy.id)}
                     className="apply-btn"
+                    disabled={respondingVacancies.has(vacancy.id)}
                   >
-                    Откликнуться
-                  </Link>
+                    {respondingVacancies.has(vacancy.id) ? "Отправка..." : "Откликнуться"}
+                  </button>
                 </div>
               </div>
             ))}
@@ -492,6 +673,107 @@ export default function Jobs() {
           </div>
         )}
       </div>
+
+      {/* Application Modal for Unauthenticated Users */}
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Откликнуться на вакансию</h2>
+              <button className="modal-close" onClick={closeModal}>×</button>
+            </div>
+            
+            <form onSubmit={handleModalSubmit} className="application-form">
+              <div className="form-group">
+                <label htmlFor="name">Имя *</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Введите ваше имя"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="email">Email *</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Введите ваш email"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="phone">Телефон</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="Введите ваш телефон"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="telegram">Telegram</label>
+                <input
+                  type="text"
+                  id="telegram"
+                  name="telegram"
+                  value={formData.telegram}
+                  onChange={handleInputChange}
+                  placeholder="Введите ваш Telegram"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="password">Пароль *</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Создайте пароль для входа"
+                />
+              </div>
+
+              {submitMessage && (
+                <div className={`submit-message ${submitMessage.type}`}>
+                  {submitMessage.text}
+                </div>
+              )}
+
+              <div className="form-actions">
+                <button 
+                  type="button" 
+                  className="cancel-button"
+                  onClick={closeModal}
+                  disabled={isSubmitting}
+                >
+                  Отмена
+                </button>
+                <button 
+                  type="submit" 
+                  className="submit-button"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Отправка...' : 'Отправить отклик'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

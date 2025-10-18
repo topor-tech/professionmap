@@ -6,6 +6,7 @@ export default [
   route("cabinet", "routes/cabinet.tsx"),
   route("cabinet/my-companies", "routes/my-companies.tsx"),
   route("cabinet/my-vacancies", "routes/my-vacancies.tsx"),
+  route("cabinet/funnel", "routes/funnel.tsx"),
   route("admin", "routes/admin.tsx"),
   route("job_page/:id", "routes/job_page.tsx"),
 ] satisfies RouteConfig;

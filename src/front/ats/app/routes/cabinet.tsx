@@ -150,6 +150,14 @@ export default function Cabinet() {
               <p className="cabinet-action-description">Управление вакансиями</p>
             </button>
 
+            <button 
+              onClick={() => navigate("/cabinet/funnel")}
+              className="cabinet-action-button"
+            >
+              <h3 className="cabinet-action-title">Воронка найма</h3>
+              <p className="cabinet-action-description">Управление кандидатами и откликами</p>
+            </button>
+
             <button className="cabinet-action-button">
               <h3 className="cabinet-action-title">Добавить кандидата</h3>
               <p className="cabinet-action-description">Зарегистрировать нового кандидата</p>

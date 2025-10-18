@@ -4,12 +4,16 @@
 
 /**
  * Get the API base URL based on the current domain
- * - If current domain is localhost, use https://ats.professionmap.ru
+ * - If current domain is localhost, use http://localhost:8000 for development
  * - Otherwise, use the current domain and scheme
  */
 export function getApiBaseUrl(): string {
   if (typeof window === 'undefined') {
-    // Server-side rendering fallback
+    // Server-side rendering fallback - check environment
+    // In development, use localhost:8000, in production use the production API
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev') {
+      return 'http://localhost:8000';
+    }
     return 'https://ats.professionmap.ru';
   }
 

@@ -44,7 +44,7 @@ class EmployeeRespondResponse(BaseModel):
 async def get_employee_responds(
     request: Request,
     status: Optional[str] = Query(None, description="Filter by respond status"),
-    vacancy_id: Optional[int] = Query(None, description="Filter by vacancy ID"),
+    vacancy_id: Optional[List[int]] = Query(None, description="Filter by vacancy ID(s)"),
     company_id: Optional[int] = Query(None, description="Filter by company ID"),
     limit: Optional[int] = Query(50, ge=1, le=100, description="Number of responds to return"),
     offset: Optional[int] = Query(0, ge=0, description="Number of responds to skip"),
@@ -103,8 +103,8 @@ async def get_employee_responds(
             return []
     
     # Apply vacancy filter
-    if vacancy_id is not None:
-        query = query.filter(EmployeeRespond.vacancy_id == vacancy_id)
+    if vacancy_id is not None and len(vacancy_id) > 0:
+        query = query.filter(EmployeeRespond.vacancy_id.in_(vacancy_id))
     
     # Apply company filter
     if company_id is not None:

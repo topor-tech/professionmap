@@ -6,10 +6,43 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import * as Sentry from "@sentry/react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
 import { ToastProvider } from "./components/ToastProvider";
+
+// Determine environment based on hostname
+const getEnvironment = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('local')) {
+      return 'local';
+    }
+    return 'prod';
+  }
+  return 'prod'; // Default to prod for SSR
+};
+
+Sentry.init({
+  dsn: "https://1f6fa1d150d69f7c41b5720fdfa7f0b5@sentry.topor.tech/4",
+  environment: getEnvironment(),
+  // Setting this option to true will send default PII data to Sentry.
+  // For example, automatic IP address collection on events
+  sendDefaultPii: true
+});
+
+function ErrorFallback({ error, resetError }: { error: unknown; resetError: () => void }) {
+  return (
+    <div className="pt-16 p-4 container mx-auto">
+      <h1>Something went wrong</h1>
+      <p>We're sorry, but something unexpected happened.</p>
+      <button onClick={resetError} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
+        Try again
+      </button>
+    </div>
+  );
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -34,9 +67,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ToastProvider>
-          {children}
-        </ToastProvider>
+        <Sentry.ErrorBoundary fallback={ErrorFallback} showDialog>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </Sentry.ErrorBoundary>
         <ScrollRestoration />
         <Scripts />
       </body>

@@ -2,6 +2,7 @@ import type { Route } from "./+types/my-companies";
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { getApiUrl } from "../utils/api";
+import "./my-companies.css";
 
 interface Company {
   id: number;
@@ -94,9 +95,9 @@ export default function MyCompanies() {
 
   if (isLoading) {
     return (
-      <main className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#030e18', color: 'var(--color-text-primary)' }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+      <main className="companies-loading">
+        <div className="companies-loading-spinner">
+          <div className="spinner"></div>
           <p>Загрузка...</p>
         </div>
       </main>
@@ -104,34 +105,24 @@ export default function MyCompanies() {
   }
 
   return (
-    <main className="min-h-screen" style={{ backgroundColor: '#030e18', color: 'var(--color-text-primary)' }}>
+    <main className="companies-container">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
-        <header className="flex justify-between items-center mb-8">
+        <header className="companies-header">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Мои компании</h1>
-            <p className="text-lg opacity-80">Управление вашими компаниями</p>
+            <h1 className="companies-title">Мои компании</h1>
+            <p className="companies-subtitle">Управление вашими компаниями</p>
           </div>
-          <div className="flex gap-4">
+          <div className="companies-actions">
             <button
               onClick={() => navigate("/cabinet")}
-              className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-700 hover:bg-gray-600"
+              className="companies-back-button"
             >
               Назад в кабинет
             </button>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="px-4 py-2 rounded-lg font-medium transition-colors"
-              style={{
-                backgroundColor: 'var(--color-accent)',
-                color: 'white'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent)';
-              }}
+              className="companies-create-button"
             >
               Создать компанию
             </button>
@@ -140,12 +131,12 @@ export default function MyCompanies() {
 
         {/* Create Company Form Modal */}
         {showCreateForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-              <h2 className="text-xl font-bold mb-4">Создать новую компанию</h2>
+          <div className="companies-modal-overlay">
+            <div className="companies-modal">
+              <h2 className="companies-modal-title">Создать новую компанию</h2>
               <form onSubmit={handleCreateCompany}>
-                <div className="mb-4">
-                  <label htmlFor="name" className="block text-sm font-medium mb-2">
+                <div className="companies-form-group">
+                  <label htmlFor="name" className="companies-form-label">
                     Название компании *
                   </label>
                   <input
@@ -155,12 +146,12 @@ export default function MyCompanies() {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="companies-form-input"
                     placeholder="Введите название компании"
                   />
                 </div>
-                <div className="mb-6">
-                  <label htmlFor="public_description" className="block text-sm font-medium mb-2">
+                <div className="companies-form-group">
+                  <label htmlFor="public_description" className="companies-form-label">
                     Описание компании
                   </label>
                   <textarea
@@ -169,36 +160,22 @@ export default function MyCompanies() {
                     value={formData.public_description}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="companies-form-textarea"
                     placeholder="Краткое описание компании"
                   />
                 </div>
-                <div className="flex gap-3">
+                <div className="companies-form-actions">
                   <button
                     type="button"
                     onClick={() => setShowCreateForm(false)}
-                    className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+                    className="companies-form-button cancel"
                   >
                     Отмена
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-                    style={{
-                      backgroundColor: 'var(--color-accent)',
-                      color: 'white'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSubmitting) {
-                        e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSubmitting) {
-                        e.currentTarget.style.backgroundColor = 'var(--color-accent)';
-                      }
-                    }}
+                    className="companies-form-button submit"
                   >
                     {isSubmitting ? "Создание..." : "Создать"}
                   </button>
@@ -210,45 +187,35 @@ export default function MyCompanies() {
 
         {/* Companies List */}
         {companies.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🏢</div>
-            <h3 className="text-xl font-semibold mb-2">У вас пока нет компаний</h3>
-            <p className="text-gray-400 mb-6">Создайте свою первую компанию, чтобы начать работу</p>
+          <div className="companies-empty">
+            <div className="companies-empty-icon">🏢</div>
+            <h3 className="companies-empty-title">У вас пока нет компаний</h3>
+            <p className="companies-empty-description">Создайте свою первую компанию, чтобы начать работу</p>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="px-6 py-3 rounded-lg font-medium transition-colors"
-              style={{
-                backgroundColor: 'var(--color-accent)',
-                color: 'white'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent)';
-              }}
+              className="companies-empty-button"
             >
               Создать первую компанию
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="companies-grid">
             {companies.map((company) => (
-              <div key={company.id} className="bg-gray-800 rounded-lg p-6 hover:bg-gray-750 transition-colors">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold">{company.name}</h3>
-                  <span className="text-xs text-gray-400">
+              <div key={company.id} className="companies-card">
+                <div className="companies-card-header">
+                  <h3 className="companies-card-title">{company.name}</h3>
+                  <span className="companies-card-date">
                     {new Date(company.created_at).toLocaleDateString('ru-RU')}
                   </span>
                 </div>
                 {company.public_description && (
-                  <p className="text-gray-300 mb-4 line-clamp-3">{company.public_description}</p>
+                  <p className="companies-card-description">{company.public_description}</p>
                 )}
-                <div className="flex gap-2">
-                  <button className="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded text-sm transition-colors">
+                <div className="companies-card-actions">
+                  <button className="companies-card-button manage">
                     Управление
                   </button>
-                  <button className="px-3 py-1 bg-gray-600 hover:bg-gray-500 rounded text-sm transition-colors">
+                  <button className="companies-card-button settings">
                     Настройки
                   </button>
                 </div>

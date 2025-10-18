@@ -2,9 +2,10 @@ from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, status, Depends, Request, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_
 
-from ats.database import get_db
+from ats.database import get_async_db
 from ats.orm.vacancy import Vacancy, VacancyStatus
 from ats.orm.company import Company, HRToCompanyAccess
 from ats.orm.user import UserRole
@@ -30,7 +31,7 @@ class VacancyResponse(BaseModel):
 async def get_user_vacancies(
     request: Request,
     company_id: Optional[int] = Query(None, description="Filter by company ID"),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Get all vacancies that the current user has access to.
@@ -41,7 +42,7 @@ async def get_user_vacancies(
     current_user = get_current_user_from_token(request)
     
     # Build base query
-    query = db.query(
+    query = select(
         Vacancy,
         Company.name.label("company_name")
     ).join(
@@ -68,7 +69,8 @@ async def get_user_vacancies(
         query = query.filter(Vacancy.company_id == company_id)
     
     # Execute query
-    vacancies = query.all()
+    result = await db.execute(query)
+    vacancies = result.all()
     
     return [
         VacancyResponse(

@@ -4,10 +4,11 @@ from datetime import datetime, timedelta
 
 import bcrypt
 from fastapi import APIRouter, HTTPException, status, Depends, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import or_
+from sqlalchemy import select
 
-from ats.database import get_db
+from ats.database import get_async_db
 from ats.config import settings
 from ats.orm.user import User, UserRole, UserRoleAssociation
 from ats.libs.jwt import get_current_user_from_token
@@ -46,7 +47,7 @@ def get_password_hash(password: str) -> str:
 async def create_user(
     user_data: CreateUserRequest,
     request: Request,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Create a new user in the database.
@@ -56,13 +57,16 @@ async def create_user(
     current_user = get_current_user_from_token(request)
     
     # Check if user with this email already exists
-    existing_user = db.query(User).filter(
-        or_(
-            User.email == user_data.email, 
-            User.phone == user_data.phone, 
-            User.telegram == user_data.telegram,
+    result = await db.execute(
+        select(User).filter(
+            or_(
+                User.email == user_data.email, 
+                User.phone == user_data.phone, 
+                User.telegram == user_data.telegram,
+            )
         )
-    ).first()
+    )
+    existing_user = result.scalar_one_or_none()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -80,7 +84,7 @@ async def create_user(
     )
     
     db.add(new_user)
-    db.flush()  # Flush to get the user ID
+    await db.flush()  # Flush to get the user ID
     
     # Add user roles
     created_roles = []
@@ -93,8 +97,8 @@ async def create_user(
             db.add(role_association)
             created_roles.append(role)
     
-    db.commit()
-    db.refresh(new_user)
+    await db.commit()
+    await db.refresh(new_user)
     
     
     return CreateUserResponse(

@@ -3,9 +3,10 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, status, Depends, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from ats.database import get_db
+from ats.database import get_async_db
 from ats.orm.vacancy import Vacancy, VacancyStatus
 from ats.orm.company import Company, HRToCompanyAccess
 from ats.orm.user import UserRole
@@ -35,7 +36,7 @@ class CreateVacancyResponse(BaseModel):
     created_at: datetime
 
 
-def check_hr_permissions_for_company(current_user, company_id: int, db: Session) -> None:
+async def check_hr_permissions_for_company(current_user, company_id: int, db: AsyncSession) -> None:
     """Check if current user has HR access to the specified company"""
     user_roles = current_user.roles  # roles is already a List[str]
     allowed_roles = [UserRole.HR.value, UserRole.SUPERUSER.value, UserRole.ADMIN.value]
@@ -50,10 +51,13 @@ def check_hr_permissions_for_company(current_user, company_id: int, db: Session)
     if UserRole.SUPERUSER.value in current_user.roles or UserRole.ADMIN.value in current_user.roles:
         return
     
-    hr_access = db.query(HRToCompanyAccess).filter(
-        HRToCompanyAccess.user_id == current_user.id,
-        HRToCompanyAccess.company_id == company_id
-    ).first()
+    result = await db.execute(
+        select(HRToCompanyAccess).filter(
+            HRToCompanyAccess.user_id == current_user.id,
+            HRToCompanyAccess.company_id == company_id
+        )
+    )
+    hr_access = result.scalar_one_or_none()
     
     if not hr_access:
         raise HTTPException(
@@ -66,7 +70,7 @@ def check_hr_permissions_for_company(current_user, company_id: int, db: Session)
 async def create_vacancy(
     vacancy_data: CreateVacancyRequest,
     request: Request,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Create a new vacancy in the database.
@@ -77,7 +81,7 @@ async def create_vacancy(
     
     # Check if company exists
     # Check if user has required permissions for this company
-    check_hr_permissions_for_company(current_user, vacancy_data.company_id, db)
+    await check_hr_permissions_for_company(current_user, vacancy_data.company_id, db)
     
     # Create new vacancy
     new_vacancy = Vacancy(
@@ -90,8 +94,8 @@ async def create_vacancy(
     )
     
     db.add(new_vacancy)
-    db.commit()
-    db.refresh(new_vacancy)
+    await db.commit()
+    await db.refresh(new_vacancy)
     
     return CreateVacancyResponse(
         id=new_vacancy.id,

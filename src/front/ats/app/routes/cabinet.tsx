@@ -2,6 +2,7 @@ import type { Route } from "./+types/cabinet";
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { getApiUrl } from "../utils/api";
+import "./cabinet.css";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -82,9 +83,9 @@ export default function Cabinet() {
 
   if (isLoading) {
     return (
-      <main className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#030e18', color: 'var(--color-text-primary)' }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+      <main className="cabinet-loading">
+        <div className="cabinet-loading-spinner">
+          <div className="spinner"></div>
           <p>Загрузка...</p>
         </div>
       </main>
@@ -92,93 +93,83 @@ export default function Cabinet() {
   }
 
   return (
-    <main className="min-h-screen" style={{ backgroundColor: '#030e18', color: 'var(--color-text-primary)' }}>
+    <main className="cabinet-container">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
-        <header className="flex justify-between items-center mb-8">
+        <header className="cabinet-header">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Личный кабинет</h1>
-            <p className="text-lg opacity-80">Добро пожаловать, {userInfo?.email}</p>
+            <h1 className="cabinet-title">Личный кабинет</h1>
+            <p className="cabinet-subtitle">Добро пожаловать, {userInfo?.email}</p>
           </div>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 rounded-lg font-medium transition-colors"
-            style={{
-              backgroundColor: 'var(--color-accent)',
-              color: 'white'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--color-accent)';
-            }}
+            className="cabinet-logout-button"
           >
             Выйти
           </button>
         </header>
 
         {/* Dashboard Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="cabinet-dashboard">
           {/* Stats Cards */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">Активные вакансии</h3>
-            <p className="text-3xl font-bold text-blue-400">
+          <div className="cabinet-stats-card">
+            <h3 className="cabinet-stats-title">Активные вакансии</h3>
+            <p className="cabinet-stats-value active">
               {vacancyStats?.active_vacancies ?? 0}
             </p>
-            <p className="text-sm opacity-70 mt-1">На модерации: {vacancyStats?.on_review_vacancies ?? 0}</p>
+            <p className="cabinet-stats-subtitle">На модерации: {vacancyStats?.on_review_vacancies ?? 0}</p>
           </div>
 
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">Кандидаты</h3>
-            <p className="text-3xl font-bold text-green-400">0</p>
-            <p className="text-sm opacity-70 mt-1">Всего кандидатов</p>
+          <div className="cabinet-stats-card">
+            <h3 className="cabinet-stats-title">Кандидаты</h3>
+            <p className="cabinet-stats-value candidates">0</p>
+            <p className="cabinet-stats-subtitle">Всего кандидатов</p>
           </div>
 
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">Интервью</h3>
-            <p className="text-3xl font-bold text-yellow-400">0</p>
-            <p className="text-sm opacity-70 mt-1">Запланировано</p>
+          <div className="cabinet-stats-card">
+            <h3 className="cabinet-stats-title">Интервью</h3>
+            <p className="cabinet-stats-value interviews">0</p>
+            <p className="cabinet-stats-subtitle">Запланировано</p>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-6">Быстрые действия</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="cabinet-actions">
+          <h2 className="cabinet-actions-title">Быстрые действия</h2>
+          <div className="cabinet-actions-grid">
             <button 
               onClick={() => navigate("/cabinet/my-companies")}
-              className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors"
+              className="cabinet-action-button"
             >
-              <h3 className="text-lg font-semibold mb-2">Мои компании</h3>
-              <p className="text-sm opacity-70">Управление компаниями</p>
+              <h3 className="cabinet-action-title">Мои компании</h3>
+              <p className="cabinet-action-description">Управление компаниями</p>
             </button>
 
             <button 
               onClick={() => navigate("/cabinet/my-vacancies")}
-              className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors"
+              className="cabinet-action-button"
             >
-              <h3 className="text-lg font-semibold mb-2">Мои вакансии</h3>
-              <p className="text-sm opacity-70">Управление вакансиями</p>
+              <h3 className="cabinet-action-title">Мои вакансии</h3>
+              <p className="cabinet-action-description">Управление вакансиями</p>
             </button>
 
-            <button className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors">
-              <h3 className="text-lg font-semibold mb-2">Добавить кандидата</h3>
-              <p className="text-sm opacity-70">Зарегистрировать нового кандидата</p>
+            <button className="cabinet-action-button">
+              <h3 className="cabinet-action-title">Добавить кандидата</h3>
+              <p className="cabinet-action-description">Зарегистрировать нового кандидата</p>
             </button>
 
-            <button className="bg-gray-800 hover:bg-gray-700 rounded-lg p-6 text-left transition-colors">
-              <h3 className="text-lg font-semibold mb-2">Просмотр отчетов</h3>
-              <p className="text-sm opacity-70">Аналитика и статистика</p>
+            <button className="cabinet-action-button">
+              <h3 className="cabinet-action-title">Просмотр отчетов</h3>
+              <p className="cabinet-action-description">Аналитика и статистика</p>
             </button>
           </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-6">Последняя активность</h2>
-          <div className="bg-gray-800 rounded-lg p-6">
-            <p className="text-center opacity-70">Активность отсутствует</p>
+        <div className="cabinet-activity">
+          <h2 className="cabinet-activity-title">Последняя активность</h2>
+          <div className="cabinet-activity-empty">
+            <p>Активность отсутствует</p>
           </div>
         </div>
       </div>

@@ -3,9 +3,9 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, status, Depends, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ats.database import get_db
+from ats.database import get_async_db
 from ats.orm.company import Company, HRToCompanyAccess
 from ats.orm.user import UserRole
 from ats.libs.jwt import get_current_user_from_token
@@ -43,7 +43,7 @@ def check_hr_permissions(current_user) -> None:
 async def create_company(
     company_data: CreateCompanyRequest,
     request: Request,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Create a new company in the database.
@@ -62,7 +62,7 @@ async def create_company(
     )
     
     db.add(new_company)
-    db.flush()  # Flush to get the company ID
+    await db.flush()  # Flush to get the company ID
     
     # Add HR access record for the current user
     if UserRole.SUPERUSER.value not in current_user.roles:
@@ -72,8 +72,8 @@ async def create_company(
         )
         db.add(hr_access)
     
-    db.commit()
-    db.refresh(new_company)
+    await db.commit()
+    await db.refresh(new_company)
     
     return CreateCompanyResponse(
         id=new_company.id,

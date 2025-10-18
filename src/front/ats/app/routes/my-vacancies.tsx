@@ -2,6 +2,7 @@ import type { Route } from "./+types/my-vacancies";
 import { useNavigate } from "react-router";
 import { useEffect, useState, useRef } from "react";
 import { getApiUrl } from "../utils/api";
+import "./my-vacancies.css";
 
 interface Vacancy {
   id: number;
@@ -331,9 +332,9 @@ export default function MyVacancies() {
 
   if (isLoading) {
     return (
-      <main className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#030e18', color: 'var(--color-text-primary)' }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+      <main className="vacancies-loading">
+        <div className="vacancies-loading-spinner">
+          <div className="spinner"></div>
           <p>Загрузка...</p>
         </div>
       </main>
@@ -341,34 +342,24 @@ export default function MyVacancies() {
   }
 
   return (
-    <main className="min-h-screen" style={{ backgroundColor: '#030e18', color: 'var(--color-text-primary)' }}>
+    <main className="vacancies-container">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
-        <header className="flex justify-between items-center mb-8">
+        <header className="vacancies-header">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Мои вакансии</h1>
-            <p className="text-lg opacity-80">Управление вашими вакансиями</p>
+            <h1 className="vacancies-title">Мои вакансии</h1>
+            <p className="vacancies-subtitle">Управление вашими вакансиями</p>
           </div>
-          <div className="flex gap-4">
+          <div className="vacancies-actions">
             <button
               onClick={() => navigate("/cabinet")}
-              className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-700 hover:bg-gray-600"
+              className="vacancies-back-button"
             >
               Назад в кабинет
             </button>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="px-4 py-2 rounded-lg font-medium transition-colors"
-              style={{
-                backgroundColor: 'var(--color-accent)',
-                color: 'white'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent)';
-              }}
+              className="vacancies-create-button"
             >
               Создать вакансию
             </button>
@@ -376,19 +367,19 @@ export default function MyVacancies() {
         </header>
 
         {/* Company Filter */}
-        <div className="mb-6">
-          <div className="flex gap-4 items-start flex-wrap">
-            <label className="text-sm font-medium mt-2">Фильтр по компаниям:</label>
-            <div className="flex-1 max-w-2xl">
+        <div className="vacancies-filter">
+          <div className="vacancies-filter-content">
+            <label className="vacancies-filter-label">Фильтр по компаниям:</label>
+            <div className="vacancies-filter-input-container">
               {/* Selected Companies Chips */}
               {selectedFilterCompanies.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="vacancies-filter-chips">
                   {selectedFilterCompanies.map((company) => (
-                    <div key={company.id} className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-lg text-sm">
+                    <div key={company.id} className="vacancies-filter-chip">
                       <span>{company.name}</span>
                       <button
                         onClick={() => removeFilterCompany(company.id)}
-                        className="ml-1 hover:bg-blue-700 rounded-full p-1 transition-colors"
+                        className="vacancies-filter-chip-remove"
                       >
                         ✕
                       </button>
@@ -396,7 +387,7 @@ export default function MyVacancies() {
                   ))}
                   <button
                     onClick={clearAllFilters}
-                    className="px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-sm transition-colors"
+                    className="vacancies-filter-clear"
                   >
                     Очистить все
                   </button>
@@ -404,7 +395,7 @@ export default function MyVacancies() {
               )}
               
               {/* Search Input */}
-              <div className="relative">
+              <div className="vacancies-filter-input-wrapper">
                 <input
                   ref={filterInputRef}
                   type="text"
@@ -422,17 +413,17 @@ export default function MyVacancies() {
                     setTimeout(() => setShowFilterSuggestions(false), 200);
                   }}
                   placeholder="Поиск компаний для фильтрации..."
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="vacancies-filter-input"
                 />
                 {showFilterSuggestions && filterSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-gray-800 border border-gray-600 rounded-lg mt-1 max-h-48 overflow-y-auto z-10">
+                  <div className="vacancies-filter-suggestions">
                     {filterSuggestions
                       .filter(company => !selectedFilterCompanies.some(selected => selected.id === company.id))
                       .map((company) => (
                         <button
                           key={company.id}
                           onClick={() => handleFilterSelect(company)}
-                          className="w-full px-3 py-2 text-left hover:bg-gray-700 transition-colors"
+                          className="vacancies-filter-suggestion"
                         >
                           {company.name}
                         </button>
@@ -446,16 +437,16 @@ export default function MyVacancies() {
 
         {/* Create Vacancy Form Modal */}
         {showCreateForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-bold mb-4">Создать новую вакансию</h2>
+          <div className="vacancies-modal-overlay">
+            <div className="vacancies-modal">
+              <h2 className="vacancies-modal-title">Создать новую вакансию</h2>
               <form onSubmit={handleCreateVacancy}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="vacancies-form-grid">
                   <div>
-                    <label htmlFor="company_search" className="block text-sm font-medium mb-2">
+                    <label htmlFor="company_search" className="vacancies-form-label">
                       Компания *
                     </label>
-                    <div className="relative">
+                    <div className="vacancies-company-search">
                       <input
                         ref={companyInputRef}
                         type="text"
@@ -475,16 +466,16 @@ export default function MyVacancies() {
                         }}
                         placeholder="Поиск компании..."
                         required
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                        className="vacancies-form-input"
                       />
                       {showCompanySuggestions && companySuggestions.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 bg-gray-800 border border-gray-600 rounded-lg mt-1 max-h-48 overflow-y-auto z-20">
+                        <div className="vacancies-company-suggestions">
                           {companySuggestions.map((company) => (
                             <button
                               key={company.id}
                               type="button"
                               onClick={() => handleCompanySelect(company)}
-                              className="w-full px-3 py-2 text-left hover:bg-gray-700 transition-colors"
+                              className="vacancies-company-suggestion"
                             >
                               {company.name}
                             </button>
@@ -493,13 +484,13 @@ export default function MyVacancies() {
                       )}
                     </div>
                     {selectedCompanyName && (
-                      <div className="mt-2">
-                        <span className="text-sm text-green-400">✓ Выбрано: {selectedCompanyName}</span>
+                      <div className="vacancies-company-selected">
+                        ✓ Выбрано: {selectedCompanyName}
                       </div>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="expires_at" className="block text-sm font-medium mb-2">
+                    <label htmlFor="expires_at" className="vacancies-form-label">
                       Дата окончания
                     </label>
                     <input
@@ -508,12 +499,12 @@ export default function MyVacancies() {
                       name="expires_at"
                       value={formData.expires_at}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                      className="vacancies-form-input"
                     />
                   </div>
                 </div>
-                <div className="mb-4">
-                  <label htmlFor="title" className="block text-sm font-medium mb-2">
+                <div className="vacancies-form-group">
+                  <label htmlFor="title" className="vacancies-form-label">
                     Название вакансии *
                   </label>
                   <input
@@ -523,12 +514,12 @@ export default function MyVacancies() {
                     value={formData.title}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="vacancies-form-input"
                     placeholder="Введите название вакансии"
                   />
                 </div>
-                <div className="mb-4">
-                  <label htmlFor="description" className="block text-sm font-medium mb-2">
+                <div className="vacancies-form-group">
+                  <label htmlFor="description" className="vacancies-form-label">
                     Описание вакансии
                   </label>
                   <textarea
@@ -537,12 +528,12 @@ export default function MyVacancies() {
                     value={formData.description}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="vacancies-form-textarea"
                     placeholder="Описание вакансии"
                   />
                 </div>
-                <div className="mb-6">
-                  <label htmlFor="requirements" className="block text-sm font-medium mb-2">
+                <div className="vacancies-form-group">
+                  <label htmlFor="requirements" className="vacancies-form-label">
                     Требования
                   </label>
                   <textarea
@@ -551,39 +542,25 @@ export default function MyVacancies() {
                     value={formData.requirements}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="vacancies-form-textarea"
                     placeholder="Требования к кандидату"
                   />
                 </div>
-                <div className="flex gap-3">
+                <div className="vacancies-form-actions">
                   <button
                     type="button"
                     onClick={() => {
                       resetCreateForm();
                       setShowCreateForm(false);
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+                    className="vacancies-form-button cancel"
                   >
                     Отмена
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-                    style={{
-                      backgroundColor: 'var(--color-accent)',
-                      color: 'white'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSubmitting) {
-                        e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSubmitting) {
-                        e.currentTarget.style.backgroundColor = 'var(--color-accent)';
-                      }
-                    }}
+                    className="vacancies-form-button submit"
                   >
                     {isSubmitting ? "Создание..." : "Создать"}
                   </button>
@@ -595,66 +572,56 @@ export default function MyVacancies() {
 
         {/* Vacancies List */}
         {vacancies.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">💼</div>
-            <h3 className="text-xl font-semibold mb-2">У вас пока нет вакансий</h3>
-            <p className="text-gray-400 mb-6">Создайте свою первую вакансию, чтобы начать работу</p>
+          <div className="vacancies-empty">
+            <div className="vacancies-empty-icon">💼</div>
+            <h3 className="vacancies-empty-title">У вас пока нет вакансий</h3>
+            <p className="vacancies-empty-description">Создайте свою первую вакансию, чтобы начать работу</p>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="px-6 py-3 rounded-lg font-medium transition-colors"
-              style={{
-                backgroundColor: 'var(--color-accent)',
-                color: 'white'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent)';
-              }}
+              className="vacancies-empty-button"
             >
               Создать первую вакансию
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="vacancies-grid">
             {vacancies.map((vacancy) => (
-              <div key={vacancy.id} className="bg-gray-800 rounded-lg p-6 hover:bg-gray-750 transition-colors">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-2">{vacancy.title}</h3>
-                    <p className="text-sm text-gray-400 mb-2">{vacancy.company_name}</p>
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(vacancy.status)}`}>
+              <div key={vacancy.id} className="vacancies-card">
+                <div className="vacancies-card-header">
+                  <div className="vacancies-card-content">
+                    <h3 className="vacancies-card-title">{vacancy.title}</h3>
+                    <p className="vacancies-card-company">{vacancy.company_name}</p>
+                    <span className={`vacancies-card-status ${vacancy.status.toLowerCase().replace(' ', '-')}`}>
                       {getStatusText(vacancy.status)}
                     </span>
                   </div>
-                  <span className="text-xs text-gray-400">
+                  <span className="vacancies-card-date">
                     {new Date(vacancy.created_at).toLocaleDateString('ru-RU')}
                   </span>
                 </div>
                 
                 {vacancy.description && (
-                  <p className="text-gray-300 mb-3 line-clamp-3">{vacancy.description}</p>
+                  <p className="vacancies-card-description">{vacancy.description}</p>
                 )}
                 
                 {vacancy.requirements && (
-                  <div className="mb-3">
-                    <p className="text-sm font-medium text-gray-400 mb-1">Требования:</p>
-                    <p className="text-gray-300 text-sm line-clamp-2">{vacancy.requirements}</p>
+                  <div className="vacancies-card-requirements">
+                    <p className="vacancies-card-requirements-title">Требования:</p>
+                    <p className="vacancies-card-requirements-text">{vacancy.requirements}</p>
                   </div>
                 )}
                 
                 {vacancy.expires_at && (
-                  <p className="text-sm text-gray-400 mb-3">
+                  <p className="vacancies-card-expires">
                     Истекает: {new Date(vacancy.expires_at).toLocaleDateString('ru-RU')}
                   </p>
                 )}
                 
-                <div className="flex gap-2">
-                  <button className="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded text-sm transition-colors">
+                <div className="vacancies-card-actions">
+                  <button className="vacancies-card-button edit">
                     Редактировать
                   </button>
-                  <button className="px-3 py-1 bg-gray-600 hover:bg-gray-500 rounded text-sm transition-colors">
+                  <button className="vacancies-card-button view">
                     Просмотр
                   </button>
                 </div>

@@ -2,9 +2,10 @@ from typing import List
 from pydantic import BaseModel
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, status, Depends, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from ats.database import get_db
+from ats.database import get_async_db
 from ats.orm.company import Company, HRToCompanyAccess
 from ats.orm.user import UserRole
 from ats.libs.jwt import get_current_user_from_token
@@ -23,7 +24,7 @@ class CompanyResponse(BaseModel):
 @router.get("/hr/companies", response_model=List[CompanyResponse])
 async def get_user_companies(
     request: Request,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Get all companies that the current user has access to.
@@ -34,11 +35,15 @@ async def get_user_companies(
     
     # Get companies that the user has access to
     if UserRole.SUPERUSER.value in current_user.roles or UserRole.ADMIN.value in current_user.roles:
-        companies = db.query(Company).all()
+        result = await db.execute(select(Company))
+        companies = result.scalars().all()
     else:
-        companies = db.query(Company).join(HRToCompanyAccess).filter(
-            HRToCompanyAccess.user_id == current_user.id
-        ).all()
+        result = await db.execute(
+            select(Company).join(HRToCompanyAccess).filter(
+                HRToCompanyAccess.user_id == current_user.id
+            )
+        )
+        companies = result.scalars().all()
     
     return [
         CompanyResponse(

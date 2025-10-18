@@ -2,9 +2,10 @@ from typing import Optional, Dict, Any
 from pydantic import BaseModel
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, status, Depends, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from ats.database import get_db
+from ats.database import get_async_db
 from ats.config import settings
 from ats.orm.user import User, UserRoleAssociation, UserRole
 from ats.libs.jwt import get_current_user_from_token, UserJWTTokenInfoResponse
@@ -15,7 +16,7 @@ router = APIRouter(tags=["user_info"])
 @router.get("/user_info", response_model=UserJWTTokenInfoResponse)
 async def get_current_user_info(
     request: Request,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Get current user information from JWT token.
@@ -32,14 +33,20 @@ async def get_current_user_info(
             roles=[UserRole.SUPERUSER.value]
         )
 
-    user = db.query(User).filter(User.id == jwt_token_payload.id).first()
+    result = await db.execute(
+        select(User).filter(User.id == jwt_token_payload.id)
+    )
+    user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
 
-    roles = db.query(UserRoleAssociation.role).filter(UserRoleAssociation.user_id == user.id).all()
+    roles_result = await db.execute(
+        select(UserRoleAssociation.role).filter(UserRoleAssociation.user_id == user.id)
+    )
+    roles = roles_result.scalars().all()
     roles = [role.role for role in roles]
     return UserJWTTokenInfoResponse(
         id=user.id,

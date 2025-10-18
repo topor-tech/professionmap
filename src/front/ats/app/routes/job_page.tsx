@@ -1,7 +1,7 @@
 import type { Route } from "./+types/home";
 import { useLoaderData, Link } from "react-router";
 import { getApiUrl } from "../utils/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CandidateNavbar } from "../components/CandidateNavbar";
 import "./job_page.css";
 
@@ -29,6 +29,20 @@ interface ApplicationResponse {
   user_id: number;
   respond_id: number;
   message: string;
+}
+
+interface AuthenticatedApplicationResponse {
+  respond_id: number;
+  message: string;
+}
+
+interface UserInfo {
+  id: number;
+  email: string;
+  name: string;
+  phone?: string;
+  telegram?: string;
+  roles: string[];
 }
 
 export function meta({ params }: { params: { id: string } }) {
@@ -79,6 +93,32 @@ export default function JobPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch(getApiUrl("/api/v1/ats/auth/user_info"), {
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserInfo(data);
+        } else {
+          setUserInfo(null);
+        }
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+        setUserInfo(null);
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -112,28 +152,46 @@ export default function JobPage() {
     setSubmitMessage(null);
 
     try {
-      const apiUrl = getApiUrl('/api/v1/ats/candidate/respond_no_login');
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          vacancy_id: vacancyInfo.id,
-          email: formData.email,
-          phone: formData.phone || null,
-          telegram: formData.telegram || null,
-          name: formData.name,
-          password: formData.password
-        })
-      });
+      let response;
+      
+      if (userInfo) {
+        // User is authenticated, use the authenticated endpoint
+        const apiUrl = getApiUrl('/api/v1/ats/candidate/respond');
+        response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            vacancy_id: vacancyInfo.id
+          })
+        });
+      } else {
+        // User is not authenticated, use the no-login endpoint
+        const apiUrl = getApiUrl('/api/v1/ats/candidate/respond_no_login');
+        response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            vacancy_id: vacancyInfo.id,
+            email: formData.email,
+            phone: formData.phone || null,
+            telegram: formData.telegram || null,
+            name: formData.name,
+            password: formData.password
+          })
+        });
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Failed to submit application');
       }
 
-      const result: ApplicationResponse = await response.json();
+      const result = await response.json();
       setSubmitMessage({ type: 'success', text: result.message });
       
       // Close modal after successful submission
@@ -244,94 +302,136 @@ export default function JobPage() {
               <button className="modal-close" onClick={closeModal}>×</button>
             </div>
             
-            <form onSubmit={handleSubmit} className="application-form">
-              <div className="form-group">
-                <label htmlFor="name">Имя *</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Введите ваше имя"
-                />
+            {isLoadingUser ? (
+              <div className="loading-container">
+                <div className="spinner"></div>
+                <p>Проверка авторизации...</p>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="email">Email *</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Введите ваш email"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="phone">Телефон</label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="Введите ваш телефон"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="telegram">Telegram</label>
-                <input
-                  type="text"
-                  id="telegram"
-                  name="telegram"
-                  value={formData.telegram}
-                  onChange={handleInputChange}
-                  placeholder="Введите ваш Telegram"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="password">Пароль *</label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Создайте пароль для входа"
-                />
-              </div>
-
-              {submitMessage && (
-                <div className={`submit-message ${submitMessage.type}`}>
-                  {submitMessage.text}
+            ) : userInfo ? (
+              // Authenticated user - simplified form
+              <div className="authenticated-form">
+                <div className="user-info">
+                  <p>Вы авторизованы как: <strong>{userInfo.name}</strong></p>
+                  <p>Email: {userInfo.email}</p>
                 </div>
-              )}
+                
+                <form onSubmit={handleSubmit} className="application-form">
+                  {submitMessage && (
+                    <div className={`submit-message ${submitMessage.type}`}>
+                      {submitMessage.text}
+                    </div>
+                  )}
 
-              <div className="form-actions">
-                <button 
-                  type="button" 
-                  className="cancel-button"
-                  onClick={closeModal}
-                  disabled={isSubmitting}
-                >
-                  Отмена
-                </button>
-                <button 
-                  type="submit" 
-                  className="submit-button"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Отправка...' : 'Отправить отклик'}
-                </button>
+                  <div className="form-actions">
+                    <button 
+                      type="button" 
+                      className="cancel-button"
+                      onClick={closeModal}
+                      disabled={isSubmitting}
+                    >
+                      Отмена
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="submit-button"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? 'Отправка...' : 'Отправить отклик'}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
+            ) : (
+              // Unauthenticated user - full form
+              <form onSubmit={handleSubmit} className="application-form">
+                <div className="form-group">
+                  <label htmlFor="name">Имя *</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Введите ваше имя"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="email">Email *</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Введите ваш email"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="phone">Телефон</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="Введите ваш телефон"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="telegram">Telegram</label>
+                  <input
+                    type="text"
+                    id="telegram"
+                    name="telegram"
+                    value={formData.telegram}
+                    onChange={handleInputChange}
+                    placeholder="Введите ваш Telegram"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="password">Пароль *</label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Создайте пароль для входа"
+                  />
+                </div>
+
+                {submitMessage && (
+                  <div className={`submit-message ${submitMessage.type}`}>
+                    {submitMessage.text}
+                  </div>
+                )}
+
+                <div className="form-actions">
+                  <button 
+                    type="button" 
+                    className="cancel-button"
+                    onClick={closeModal}
+                    disabled={isSubmitting}
+                  >
+                    Отмена
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="submit-button"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Отправка...' : 'Отправить отклик'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

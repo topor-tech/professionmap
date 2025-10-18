@@ -24,6 +24,8 @@ from ats.api.hr.get_responds_stats import router as get_responds_stats_router
 from ats.api.hr.update_respond_status import router as update_respond_status_router
 from ats.api.hr.update_vacancy_status import router as update_vacancy_status_router
 from ats.api.candidate.get_my_responds import router as get_my_responds_router
+from ats.api.candidate.respond import router as respond_router
+from ats.api.candidate.register import router as candidate_register_router
 
 router = APIRouter(prefix="/api/v1/ats")
 router.include_router(login_router)
@@ -50,6 +52,8 @@ router.include_router(get_responds_stats_router)
 router.include_router(update_respond_status_router)
 router.include_router(update_vacancy_status_router)
 router.include_router(get_my_responds_router)
+router.include_router(respond_router)
+router.include_router(candidate_register_router)
 
 __all__ = [
     "router",

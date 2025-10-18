@@ -11,4 +11,5 @@ export default [
   route("admin", "routes/admin.tsx"),
   route("apply", "routes/apply.tsx"),
   route("job_page/:id", "routes/job_page.tsx"),
+  route("jobs", "routes/jobs.tsx"),
 ] satisfies RouteConfig;

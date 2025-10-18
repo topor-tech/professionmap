@@ -19,12 +19,24 @@ export default function Home() {
               Добро пожаловать в ProfessionMap ATS!
             </h1>
           </div>
+          <div className="home-description">
+            <p className="description-text">
+              Современная система управления талантами и подбора персонала. 
+              Найдите идеальную работу или подберите лучших кандидатов для вашей компании.
+            </p>
+          </div>
           <div className="home-actions">
+            <Link 
+              to="/jobs"
+              className="home-jobs-button"
+            >
+              Поиск вакансий
+            </Link>
             <Link 
               to="/login"
               className="home-login-button"
             >
-              Войти в систему
+              Войти как Работодатель в систему
             </Link>
           </div>
         </header>

@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 
 import bcrypt
 from fastapi import APIRouter, HTTPException, status, Depends, Request, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from ats.database import get_db
+from ats.database import get_async_db
 from ats.config import settings
 from ats.orm.user import User, UserRoleAssociation, UserRole
 from ats.libs.jwt import create_access_token, JWTTokenPayload
@@ -42,11 +43,11 @@ def get_password_hash(password: str) -> str:
 
 
 
-@router.post("/login")
+@router.post("/auth/login")
 async def login(
     login_data: LoginRequest,
     response: Response,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Login endpoint that handles both superuser and database user authentication.
@@ -82,15 +83,21 @@ async def login(
         return {"message": "Login successful"}
     
     # Check if user exists in database
-    user = db.query(User).filter(User.email == login_data.email).first()
+    result = await db.execute(
+        select(User).filter(User.email == login_data.email)
+    )
+    user = result.scalar_one_or_none()
     if user:
         # Verify password for database user
         if verify_password(login_data.password, user.password_hash):
             # Get user roles from database
-            user_roles = db.query(UserRoleAssociation.role).filter(
-                UserRoleAssociation.user_id == user.id,
-                UserRoleAssociation.role != UserRole.CANDIDATE,
-            ).all()
+            roles_result = await db.execute(
+                select(UserRoleAssociation.role).filter(
+                    UserRoleAssociation.user_id == user.id,
+                    UserRoleAssociation.role != UserRole.CANDIDATE,
+                )
+            )
+            user_roles = roles_result.scalars().all()
             
             # Check if user has at least one role
             if not user_roles:
@@ -131,7 +138,7 @@ async def login(
     )
 
 
-@router.post("/logout")
+@router.post("/auth/logout")
 async def logout(response: Response):
     """
     Logout endpoint that clears the access token cookie.

@@ -1,10 +1,10 @@
 from typing import Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, Request, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import and_, func, select
 
-from ats.database import get_db
+from ats.database import get_async_db
 from ats.orm.vacancy import Vacancy, VacancyStatus
 from ats.orm.company import Company, HRToCompanyAccess
 from ats.orm.user import UserRole
@@ -24,7 +24,7 @@ class VacancyStatsResponse(BaseModel):
 async def get_vacancy_stats(
     request: Request,
     company_id: Optional[int] = Query(None, description="Filter by company ID"),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ) ->VacancyStatsResponse:
     """
     Get vacancy statistics for the current user.
@@ -36,7 +36,7 @@ async def get_vacancy_stats(
     current_user = get_current_user_from_token(request)
     
     # Build base query
-    query = db.query(
+    query = select(
         func.count(Vacancy.id).label("total_vacancies"),
         func.count(Vacancy.id).filter(Vacancy.status == VacancyStatus.ACTIVE).label("active_vacancies"),
         func.count(Vacancy.id).filter(Vacancy.status == VacancyStatus.ON_REVIEW).label("on_review_vacancies"),
@@ -63,7 +63,8 @@ async def get_vacancy_stats(
     if company_id is not None:
         query = query.filter(Vacancy.company_id == company_id)
     
-    result = query.first()
+    result = await db.execute(query)
+    result = result.first()
     return VacancyStatsResponse(
         active_vacancies=result.active_vacancies if result else 0,
         on_review_vacancies=result.on_review_vacancies if result else 0,

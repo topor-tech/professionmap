@@ -2,12 +2,29 @@ import type { Route } from "./+types/my-companies";
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { getApiUrl } from "../utils/api";
+import "./my-companies.css";
+import { useToast } from "../components/ToastProvider";
+import { SuggestionDropdown, type SuggestionItem } from "../components/SuggestionDropdown";
+import "../components/SuggestionDropdown.css";
+
+interface UserInfoResponse {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  telegram: string | null;
+}
+
+interface UserSuggestion extends SuggestionItem {
+  telegram: string | null;
+}
 
 interface Company {
   id: number;
   name: string;
   public_description: string | null;
   created_at: string;
+  hr_user: UserInfoResponse[];
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -19,6 +36,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function MyCompanies() {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -27,6 +45,28 @@ export default function MyCompanies() {
     public_description: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAddUserForm, setShowAddUserForm] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+  const [userFormData, setUserFormData] = useState({
+    email: "",
+    name: "",
+    password: "",
+    phone: "",
+    telegram: ""
+  });
+  const [isSubmittingUser, setIsSubmittingUser] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [userSuggestions, setUserSuggestions] = useState<UserSuggestion[]>([]);
+  const [showUserSuggestions, setShowUserSuggestions] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserSuggestion | null>(null);
+  const [userFormMode, setUserFormMode] = useState<"create" | "add">("create");
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    company_id: 0,
+    name: "",
+    public_description: ""
+  });
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
   useEffect(() => {
     fetchCompanies();
@@ -72,13 +112,14 @@ export default function MyCompanies() {
         setCompanies([...companies, newCompany]);
         setFormData({ name: "", public_description: "" });
         setShowCreateForm(false);
+        showSuccess("Компания создана", `Компания "${newCompany.name}" успешно создана`);
       } else {
         const errorData = await response.json();
-        alert(`Ошибка создания компании: ${errorData.detail || "Неизвестная ошибка"}`);
+        showError("Ошибка создания", errorData.detail || "Не удалось создать компанию");
       }
     } catch (error) {
       console.error("Error creating company:", error);
-      alert("Ошибка при создании компании");
+      showError("Ошибка соединения", "Не удалось подключиться к серверу");
     } finally {
       setIsSubmitting(false);
     }
@@ -92,11 +133,201 @@ export default function MyCompanies() {
     }));
   };
 
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleAddUser = (companyId: number) => {
+    setSelectedCompanyId(companyId);
+    setShowAddUserForm(true);
+  };
+
+  const handleEditCompany = (company: Company) => {
+    setEditFormData({
+      company_id: company.id,
+      name: company.name,
+      public_description: company.public_description || ""
+    });
+    setShowEditForm(true);
+  };
+
+  const handleEditCompanySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingEdit(true);
+
+    try {
+      const response = await fetch(getApiUrl("/api/v1/ats/hr/edit_company"), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(editFormData),
+      });
+
+      if (response.ok) {
+        const updatedCompany = await response.json();
+        setCompanies(companies.map(company => 
+          company.id === updatedCompany.id ? updatedCompany : company
+        ));
+        setShowEditForm(false);
+        showSuccess("Компания обновлена", `Компания "${updatedCompany.name}" успешно обновлена`);
+      } else {
+        const errorData = await response.json();
+        showError("Ошибка обновления", errorData.detail || "Не удалось обновить компанию");
+      }
+    } catch (error) {
+      console.error("Error updating company:", error);
+      showError("Ошибка соединения", "Не удалось подключиться к серверу");
+    } finally {
+      setIsSubmittingEdit(false);
+    }
+  };
+
+  const handleUserInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setUserFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const searchUsers = async (query: string) => {
+    if (query.length < 2) {
+      setUserSuggestions([]);
+      setShowUserSuggestions(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        getApiUrl(`/api/v1/ats/hr/users/suggest?q=${encodeURIComponent(query)}&limit=10`),
+        {
+          credentials: "include",
+        }
+      );
+
+      if (response.ok) {
+        const suggestions = await response.json();
+        setUserSuggestions(suggestions);
+        setShowUserSuggestions(true);
+      } else {
+        console.error("Error searching users:", response.statusText);
+        setUserSuggestions([]);
+        setShowUserSuggestions(false);
+      }
+    } catch (error) {
+      console.error("Error searching users:", error);
+      setUserSuggestions([]);
+      setShowUserSuggestions(false);
+    }
+  };
+
+  const handleUserSearchChange = (query: string) => {
+    setUserSearchQuery(query);
+    searchUsers(query);
+  };
+
+  const selectUser = (user: SuggestionItem) => {
+    const userSuggestion = user as UserSuggestion;
+    setSelectedUser(userSuggestion);
+    setUserSearchQuery(`${userSuggestion.name} (${userSuggestion.email})`);
+    setShowUserSuggestions(false);
+    setUserFormMode("add");
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingUser(true);
+
+    try {
+      if (userFormMode === "add" && selectedUser && selectedCompanyId) {
+        // Add existing user to company
+        const response = await fetch(getApiUrl("/api/v1/ats/hr/companies/add_user"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            user_id: selectedUser.id,
+            company_id: selectedCompanyId
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          showSuccess("Пользователь добавлен", result.message);
+          setUserFormData({
+            email: "",
+            name: "",
+            password: "",
+            phone: "",
+            telegram: ""
+          });
+          setUserSearchQuery("");
+          setSelectedUser(null);
+          setShowAddUserForm(false);
+          setSelectedCompanyId(null);
+          setUserFormMode("create");
+          fetchCompanies(); // Refresh companies list
+        } else {
+          const errorData = await response.json();
+          showError("Ошибка добавления", errorData.detail || "Не удалось добавить пользователя");
+        }
+      } else {
+        // Create new user
+        const response = await fetch(getApiUrl("/api/v1/ats/auth/create_user"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            ...userFormData,
+            roles: ["hr"],
+            company_id: selectedCompanyId
+          }),
+        });
+
+        if (response.ok) {
+          const newUser = await response.json();
+          showSuccess("Пользователь создан", `Пользователь ${newUser.name} успешно создан с ролью HR`);
+          setUserFormData({
+            email: "",
+            name: "",
+            password: "",
+            phone: "",
+            telegram: ""
+          });
+          setUserSearchQuery("");
+          setSelectedUser(null);
+          setShowAddUserForm(false);
+          setSelectedCompanyId(null);
+          setUserFormMode("create");
+          fetchCompanies(); // Refresh companies list
+        } else {
+          const errorData = await response.json();
+          showError("Ошибка создания", errorData.detail || "Не удалось создать пользователя");
+        }
+      }
+    } catch (error) {
+      console.error("Error handling user:", error);
+      showError("Ошибка соединения", "Не удалось подключиться к серверу");
+    } finally {
+      setIsSubmittingUser(false);
+    }
+  };
+
   if (isLoading) {
     return (
-      <main className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#030e18', color: 'var(--color-text-primary)' }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+      <main className="companies-loading">
+        <div className="companies-loading-spinner">
+          <div className="spinner"></div>
           <p>Загрузка...</p>
         </div>
       </main>
@@ -104,34 +335,24 @@ export default function MyCompanies() {
   }
 
   return (
-    <main className="min-h-screen" style={{ backgroundColor: '#030e18', color: 'var(--color-text-primary)' }}>
+    <main className="companies-container">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
-        <header className="flex justify-between items-center mb-8">
+        <header className="companies-header">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Мои компании</h1>
-            <p className="text-lg opacity-80">Управление вашими компаниями</p>
+            <h1 className="companies-title">Мои компании</h1>
+            <p className="companies-subtitle">Управление вашими компаниями</p>
           </div>
-          <div className="flex gap-4">
+          <div className="companies-actions">
             <button
               onClick={() => navigate("/cabinet")}
-              className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-700 hover:bg-gray-600"
+              className="companies-back-button"
             >
               Назад в кабинет
             </button>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="px-4 py-2 rounded-lg font-medium transition-colors"
-              style={{
-                backgroundColor: 'var(--color-accent)',
-                color: 'white'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent)';
-              }}
+              className="companies-create-button"
             >
               Создать компанию
             </button>
@@ -140,12 +361,12 @@ export default function MyCompanies() {
 
         {/* Create Company Form Modal */}
         {showCreateForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-              <h2 className="text-xl font-bold mb-4">Создать новую компанию</h2>
+          <div className="companies-modal-overlay">
+            <div className="companies-modal">
+              <h2 className="companies-modal-title">Создать новую компанию</h2>
               <form onSubmit={handleCreateCompany}>
-                <div className="mb-4">
-                  <label htmlFor="name" className="block text-sm font-medium mb-2">
+                <div className="companies-form-group">
+                  <label htmlFor="name" className="companies-form-label">
                     Название компании *
                   </label>
                   <input
@@ -155,12 +376,12 @@ export default function MyCompanies() {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="companies-form-input"
                     placeholder="Введите название компании"
                   />
                 </div>
-                <div className="mb-6">
-                  <label htmlFor="public_description" className="block text-sm font-medium mb-2">
+                <div className="companies-form-group">
+                  <label htmlFor="public_description" className="companies-form-label">
                     Описание компании
                   </label>
                   <textarea
@@ -169,36 +390,22 @@ export default function MyCompanies() {
                     value={formData.public_description}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="companies-form-textarea"
                     placeholder="Краткое описание компании"
                   />
                 </div>
-                <div className="flex gap-3">
+                <div className="companies-form-actions">
                   <button
                     type="button"
                     onClick={() => setShowCreateForm(false)}
-                    className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+                    className="companies-form-button cancel"
                   >
                     Отмена
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-                    style={{
-                      backgroundColor: 'var(--color-accent)',
-                      color: 'white'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSubmitting) {
-                        e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSubmitting) {
-                        e.currentTarget.style.backgroundColor = 'var(--color-accent)';
-                      }
-                    }}
+                    className="companies-form-button submit"
                   >
                     {isSubmitting ? "Создание..." : "Создать"}
                   </button>
@@ -208,48 +415,280 @@ export default function MyCompanies() {
           </div>
         )}
 
+        {/* Edit Company Form Modal */}
+        {showEditForm && (
+          <div className="companies-modal-overlay">
+            <div className="companies-modal">
+              <h2 className="companies-modal-title">Редактировать компанию</h2>
+              <form onSubmit={handleEditCompanySubmit}>
+                <div className="companies-form-group">
+                  <label htmlFor="edit-name" className="companies-form-label">
+                    Название компании *
+                  </label>
+                  <input
+                    type="text"
+                    id="edit-name"
+                    name="name"
+                    value={editFormData.name}
+                    onChange={handleEditInputChange}
+                    required
+                    className="companies-form-input"
+                    placeholder="Введите название компании"
+                  />
+                </div>
+                <div className="companies-form-group">
+                  <label htmlFor="edit-public_description" className="companies-form-label">
+                    Описание компании
+                  </label>
+                  <textarea
+                    id="edit-public_description"
+                    name="public_description"
+                    value={editFormData.public_description}
+                    onChange={handleEditInputChange}
+                    rows={3}
+                    className="companies-form-textarea"
+                    placeholder="Краткое описание компании"
+                  />
+                </div>
+                <div className="companies-form-actions">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditForm(false)}
+                    className="companies-form-button cancel"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingEdit}
+                    className="companies-form-button submit"
+                  >
+                    {isSubmittingEdit ? "Сохранение..." : "Сохранить"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Add User Form Modal */}
+        {showAddUserForm && (
+          <div className="companies-modal-overlay">
+            <div className="companies-modal">
+              <h2 className="companies-modal-title">Добавить коллегу с ролью HR</h2>
+              
+              {/* User Search Section */}
+              <div className="companies-form-group">
+                <label htmlFor="user-search" className="companies-form-label">
+                  Поиск существующего пользователя
+                </label>
+                <div className="companies-user-search-container">
+                  <SuggestionDropdown
+                    value={userSearchQuery}
+                    onChange={handleUserSearchChange}
+                    onSelect={selectUser}
+                    suggestions={userSuggestions}
+                    showSuggestions={showUserSuggestions}
+                    onShowSuggestions={setShowUserSuggestions}
+                    placeholder="Введите имя, email или telegram для поиска"
+                    className="companies-user-search"
+                  />
+                </div>
+              </div>
+
+              {userFormMode === "add" && selectedUser && (
+                <div className="companies-selected-user">
+                  <p>Выбран пользователь: <strong>{selectedUser.name}</strong> ({selectedUser.email})</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setUserSearchQuery("");
+                      setUserFormMode("create");
+                    }}
+                    className="companies-form-button cancel"
+                  >
+                    Выбрать другого
+                  </button>
+                </div>
+              )}
+
+              <form onSubmit={handleCreateUser}>
+                {userFormMode === "create" && (
+                  <>
+                    <div className="companies-form-group">
+                      <label htmlFor="user-email" className="companies-form-label">
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        id="user-email"
+                        name="email"
+                        value={userFormData.email}
+                        onChange={handleUserInputChange}
+                        required
+                        className="companies-form-input"
+                        placeholder="Введите email коллеги"
+                      />
+                    </div>
+                    <div className="companies-form-group">
+                      <label htmlFor="user-name" className="companies-form-label">
+                        Имя *
+                      </label>
+                      <input
+                        type="text"
+                        id="user-name"
+                        name="name"
+                        value={userFormData.name}
+                        onChange={handleUserInputChange}
+                        required
+                        className="companies-form-input"
+                        placeholder="Введите имя коллеги"
+                      />
+                    </div>
+                    <div className="companies-form-group">
+                      <label htmlFor="user-password" className="companies-form-label">
+                        Пароль *
+                      </label>
+                      <input
+                        type="password"
+                        id="user-password"
+                        name="password"
+                        value={userFormData.password}
+                        onChange={handleUserInputChange}
+                        required
+                        className="companies-form-input"
+                        placeholder="Введите пароль для коллеги"
+                      />
+                    </div>
+                    <div className="companies-form-group">
+                      <label htmlFor="user-phone" className="companies-form-label">
+                        Телефон
+                      </label>
+                      <input
+                        type="tel"
+                        id="user-phone"
+                        name="phone"
+                        value={userFormData.phone}
+                        onChange={handleUserInputChange}
+                        className="companies-form-input"
+                        placeholder="Введите телефон коллеги"
+                      />
+                    </div>
+                    <div className="companies-form-group">
+                      <label htmlFor="user-telegram" className="companies-form-label">
+                        Telegram
+                      </label>
+                      <input
+                        type="text"
+                        id="user-telegram"
+                        name="telegram"
+                        value={userFormData.telegram}
+                        onChange={handleUserInputChange}
+                        className="companies-form-input"
+                        placeholder="Введите Telegram коллеги"
+                      />
+                    </div>
+                  </>
+                )}
+                <div className="companies-form-actions">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddUserForm(false);
+                      setSelectedCompanyId(null);
+                      setUserFormData({
+                        email: "",
+                        name: "",
+                        password: "",
+                        phone: "",
+                        telegram: ""
+                      });
+                      setUserSearchQuery("");
+                      setSelectedUser(null);
+                      setUserFormMode("create");
+                      setShowUserSuggestions(false);
+                      setUserSuggestions([]);
+                    }}
+                    className="companies-form-button cancel"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingUser}
+                    className="companies-form-button submit"
+                  >
+                    {isSubmittingUser 
+                      ? (userFormMode === "add" ? "Добавление..." : "Создание...") 
+                      : (userFormMode === "add" ? "Добавить" : "Создать")
+                    }
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Companies List */}
         {companies.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🏢</div>
-            <h3 className="text-xl font-semibold mb-2">У вас пока нет компаний</h3>
-            <p className="text-gray-400 mb-6">Создайте свою первую компанию, чтобы начать работу</p>
+          <div className="companies-empty">
+            <div className="companies-empty-icon">🏢</div>
+            <h3 className="companies-empty-title">У вас пока нет компаний</h3>
+            <p className="companies-empty-description">Создайте свою первую компанию, чтобы начать работу</p>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="px-6 py-3 rounded-lg font-medium transition-colors"
-              style={{
-                backgroundColor: 'var(--color-accent)',
-                color: 'white'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-accent)';
-              }}
+              className="companies-empty-button"
             >
               Создать первую компанию
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="companies-grid">
             {companies.map((company) => (
-              <div key={company.id} className="bg-gray-800 rounded-lg p-6 hover:bg-gray-750 transition-colors">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold">{company.name}</h3>
-                  <span className="text-xs text-gray-400">
+              <div key={company.id} className="companies-card">
+                <div className="companies-card-header">
+                  <h3 className="companies-card-title">{company.name}</h3>
+                  <span className="companies-card-date">
                     {new Date(company.created_at).toLocaleDateString('ru-RU')}
                   </span>
                 </div>
                 {company.public_description && (
-                  <p className="text-gray-300 mb-4 line-clamp-3">{company.public_description}</p>
+                  <p className="companies-card-description">{company.public_description}</p>
                 )}
-                <div className="flex gap-2">
-                  <button className="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded text-sm transition-colors">
-                    Управление
+                
+                {/* HR Admins Section */}
+                <div className="companies-card-hr-section">
+                  <h4 className="companies-card-hr-title">HR ({company.hr_user?.length || 0})</h4>
+                  {company.hr_user && company.hr_user.length > 0 ? (
+                    company.hr_user.map((hrUser) => (
+                      <div key={hrUser.id} className="companies-card-hr-user">
+                        <div className="companies-card-hr-user-info">
+                          <span className="companies-card-hr-user-name">{hrUser.name}</span>
+                          <span className="companies-card-hr-user-email">{hrUser.email}</span>
+                        </div>
+                        {hrUser.telegram && (
+                          <span className="companies-card-hr-user-telegram">@{hrUser.telegram}</span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="companies-card-hr-empty">Нет HR</p>
+                  )}
+                </div>
+                
+                <div className="companies-card-actions">
+                  <button 
+                    className="companies-card-button manage"
+                    onClick={() => handleEditCompany(company)}
+                  >
+                    Редактировать
                   </button>
-                  <button className="px-3 py-1 bg-gray-600 hover:bg-gray-500 rounded text-sm transition-colors">
-                    Настройки
+                  <button 
+                    className="companies-card-button settings"
+                    onClick={() => handleAddUser(company.id)}
+                  >
+                    Добавить коллегу
                   </button>
                 </div>
               </div>

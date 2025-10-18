@@ -1,9 +1,10 @@
 from typing import List
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, status, Depends, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from ats.database import get_db
+from ats.database import get_async_db
 from ats.orm.user import User, UserRoleAssociation, UserRole
 from ats.libs.jwt import get_current_user_from_token, JWTTokenPayload
 
@@ -36,10 +37,10 @@ def check_admin_access(jwt_token_payload: JWTTokenPayload) -> None:
         )
 
 
-@router.get("/users", response_model=List[UserResponse])
+@router.get("/auth/users", response_model=List[UserResponse])
 async def get_users(
     request: Request,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Get all users from the database.
@@ -50,15 +51,19 @@ async def get_users(
     check_admin_access(jwt_token_payload)
     
     # Get all users from database
-    users = db.query(User).all()
+    result = await db.execute(select(User))
+    users = result.scalars().all()
     
     # Build response with user roles
     result = []
     for user in users:
         # Get user roles
-        user_roles = db.query(UserRoleAssociation.role).filter(
-            UserRoleAssociation.user_id == user.id
-        ).all()
+        roles_result = await db.execute(
+            select(UserRoleAssociation.role).filter(
+                UserRoleAssociation.user_id == user.id
+            )
+        )
+        user_roles = roles_result.scalars().all()
         roles = [role.role.value for role in user_roles]
         
         result.append(UserResponse(

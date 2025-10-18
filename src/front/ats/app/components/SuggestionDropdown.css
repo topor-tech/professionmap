@@ -1,0 +1,247 @@
+.suggestion-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.suggestion-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  background-color: white;
+  color: #111827;
+}
+
+.suggestion-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Dark theme styles */
+@media (prefers-color-scheme: dark) {
+  .suggestion-input {
+    background-color: #1f2937;
+    border-color: #374151;
+    color: #f9fafb;
+  }
+
+  .suggestion-input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  }
+
+  .suggestion-input::placeholder {
+    color: #9ca3af;
+  }
+}
+
+.suggestion-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin-top: 0.25rem;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+/* Dark theme for dropdown list */
+@media (prefers-color-scheme: dark) {
+  .suggestion-dropdown-list {
+    background-color: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.suggestion-item {
+  width: 100%;
+  padding: 0.75rem;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item.selected {
+  background-color: #f3f4f6;
+}
+
+.suggestion-item:focus {
+  outline: none;
+  background-color: #e5e7eb;
+}
+
+/* Dark theme for suggestion items */
+@media (prefers-color-scheme: dark) {
+  .suggestion-item {
+    border-bottom-color: #374151;
+    color: #f9fafb;
+  }
+
+  .suggestion-item:hover,
+  .suggestion-item.selected {
+    background-color: #374151;
+  }
+
+  .suggestion-item:focus {
+    background-color: #4b5563;
+  }
+}
+
+.suggestion-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.suggestion-item-name {
+  font-weight: 500;
+  color: #111827;
+  font-size: 0.875rem;
+}
+
+.suggestion-item-email {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.suggestion-item-telegram {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+/* Dark theme for suggestion content */
+@media (prefers-color-scheme: dark) {
+  .suggestion-item-name {
+    color: #f9fafb;
+  }
+
+  .suggestion-item-email,
+  .suggestion-item-telegram {
+    color: #9ca3af;
+  }
+}
+
+/* Custom styles for different contexts */
+.companies-user-search-container .suggestion-dropdown {
+  position: relative;
+}
+
+.companies-user-search-container .suggestion-dropdown-list {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.companies-user-search-container .suggestion-item {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.companies-user-search-container .suggestion-item:hover,
+.companies-user-search-container .suggestion-item.selected {
+  background-color: #f9fafb;
+}
+
+/* Dark theme for companies user search */
+@media (prefers-color-scheme: dark) {
+  .companies-user-search-container .suggestion-dropdown-list {
+    background-color: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  }
+
+  .companies-user-search-container .suggestion-item {
+    border-bottom-color: #374151;
+    color: #f9fafb;
+  }
+
+  .companies-user-search-container .suggestion-item:hover,
+  .companies-user-search-container .suggestion-item.selected {
+    background-color: #374151;
+  }
+}
+
+.vacancies-company-search .suggestion-dropdown-list {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.vacancies-company-search .suggestion-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.vacancies-company-search .suggestion-item:hover,
+.vacancies-company-search .suggestion-item.selected {
+  background-color: #f9fafb;
+}
+
+/* Dark theme for vacancies company search */
+@media (prefers-color-scheme: dark) {
+  .vacancies-company-search .suggestion-dropdown-list {
+    background-color: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  }
+
+  .vacancies-company-search .suggestion-item {
+    border-bottom-color: #374151;
+    color: #f9fafb;
+  }
+
+  .vacancies-company-search .suggestion-item:hover,
+  .vacancies-company-search .suggestion-item.selected {
+    background-color: #374151;
+  }
+}
+
+.vacancies-filter-input-wrapper .suggestion-dropdown-list {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.vacancies-filter-input-wrapper .suggestion-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.vacancies-filter-input-wrapper .suggestion-item:hover,
+.vacancies-filter-input-wrapper .suggestion-item.selected {
+  background-color: #f9fafb;
+}
+
+/* Dark theme for vacancies filter input */
+@media (prefers-color-scheme: dark) {
+  .vacancies-filter-input-wrapper .suggestion-dropdown-list {
+    background-color: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  }
+
+  .vacancies-filter-input-wrapper .suggestion-item {
+    border-bottom-color: #374151;
+    color: #f9fafb;
+  }
+
+  .vacancies-filter-input-wrapper .suggestion-item:hover,
+  .vacancies-filter-input-wrapper .suggestion-item.selected {
+    background-color: #374151;
+  }
+}

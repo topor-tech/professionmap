@@ -374,6 +374,25 @@
   gap: 0.25rem;
 }
 
+.telegram-link {
+  text-decoration: none;
+  color: #9ca3af;
+  transition: color 0.2s;
+}
+
+.telegram-link:hover {
+  color: #0088cc;
+}
+
+.telegram-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #0088cc;
+  border-radius: 3px;
+  padding: 2px;
+  filter: brightness(0) invert(1);
+}
+
 .funnel-respond-date {
   color: #9ca3af;
   font-size: 0.8rem;

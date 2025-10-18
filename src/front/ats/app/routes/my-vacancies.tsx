@@ -52,6 +52,13 @@ export default function MyVacancies() {
     expires_at: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingVacancy, setEditingVacancy] = useState<Vacancy | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    title: "",
+    description: "",
+    requirements: "",
+    expires_at: ""
+  });
   
   // Company suggestion states
   const [companySuggestions, setCompanySuggestions] = useState<CompanySuggestion[]>([]);
@@ -305,6 +312,78 @@ export default function MyVacancies() {
     setCompanySearchQuery("");
     setSelectedCompanyName("");
     setShowCompanySuggestions(false);
+  };
+
+  const startEditingVacancy = (vacancy: Vacancy) => {
+    setEditingVacancy(vacancy);
+    setEditFormData({
+      title: vacancy.title,
+      description: vacancy.description || "",
+      requirements: vacancy.requirements || "",
+      expires_at: vacancy.expires_at ? new Date(vacancy.expires_at).toISOString().slice(0, 16) : ""
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingVacancy(null);
+    setEditFormData({
+      title: "",
+      description: "",
+      requirements: "",
+      expires_at: ""
+    });
+  };
+
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const updateVacancy = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingVacancy) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(getApiUrl(`/api/v1/ats/hr/vacancies/${editingVacancy.id}`), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          title: editFormData.title,
+          description: editFormData.description || null,
+          requirements: editFormData.requirements || null,
+          expires_at: editFormData.expires_at ? new Date(editFormData.expires_at).toISOString() : null
+        }),
+      });
+
+      if (response.ok) {
+        const updatedVacancy = await response.json();
+        // Update local state
+        setVacancies(prev => 
+          prev.map(vacancy => 
+            vacancy.id === editingVacancy.id 
+              ? { ...vacancy, ...updatedVacancy }
+              : vacancy
+          )
+        );
+        cancelEditing();
+        showSuccess("Вакансия обновлена", `Вакансия "${updatedVacancy.title}" успешно обновлена`);
+      } else {
+        const errorData = await response.json();
+        showError("Ошибка обновления", errorData.detail || "Не удалось обновить вакансию");
+      }
+    } catch (error) {
+      console.error("Error updating vacancy:", error);
+      showError("Ошибка соединения", "Не удалось подключиться к серверу");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -582,7 +661,10 @@ export default function MyVacancies() {
                 )}
                 
                 <div className="vacancies-card-actions">
-                  <button className="vacancies-card-button edit">
+                  <button 
+                    onClick={() => startEditingVacancy(vacancy)}
+                    className="vacancies-card-button edit"
+                  >
                     Редактировать
                   </button>
                   <button className="vacancies-card-button view">
@@ -591,6 +673,93 @@ export default function MyVacancies() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Edit Vacancy Modal */}
+        {editingVacancy && (
+          <div className="vacancies-modal-overlay">
+            <div className="vacancies-modal">
+              <h2 className="vacancies-modal-title">Редактировать вакансию</h2>
+              <form onSubmit={updateVacancy}>
+                <div className="vacancies-form-group">
+                  <label htmlFor="edit_title" className="vacancies-form-label">
+                    Название вакансии *
+                  </label>
+                  <input
+                    type="text"
+                    id="edit_title"
+                    name="title"
+                    value={editFormData.title}
+                    onChange={handleEditInputChange}
+                    required
+                    className="vacancies-form-input"
+                    placeholder="Введите название вакансии"
+                  />
+                </div>
+                
+                <div className="vacancies-form-group">
+                  <label htmlFor="edit_description" className="vacancies-form-label">
+                    Описание вакансии
+                  </label>
+                  <textarea
+                    id="edit_description"
+                    name="description"
+                    value={editFormData.description}
+                    onChange={handleEditInputChange}
+                    rows={3}
+                    className="vacancies-form-textarea"
+                    placeholder="Описание вакансии"
+                  />
+                </div>
+                
+                <div className="vacancies-form-group">
+                  <label htmlFor="edit_requirements" className="vacancies-form-label">
+                    Требования
+                  </label>
+                  <textarea
+                    id="edit_requirements"
+                    name="requirements"
+                    value={editFormData.requirements}
+                    onChange={handleEditInputChange}
+                    rows={3}
+                    className="vacancies-form-textarea"
+                    placeholder="Требования к кандидату"
+                  />
+                </div>
+                
+                <div className="vacancies-form-group">
+                  <label htmlFor="edit_expires_at" className="vacancies-form-label">
+                    Дата окончания
+                  </label>
+                  <input
+                    type="datetime-local"
+                    id="edit_expires_at"
+                    name="expires_at"
+                    value={editFormData.expires_at}
+                    onChange={handleEditInputChange}
+                    className="vacancies-form-input"
+                  />
+                </div>
+                
+                <div className="vacancies-form-actions">
+                  <button
+                    type="button"
+                    onClick={cancelEditing}
+                    className="vacancies-form-button cancel"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="vacancies-form-button submit"
+                  >
+                    {isSubmitting ? "Обновление..." : "Обновить"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>

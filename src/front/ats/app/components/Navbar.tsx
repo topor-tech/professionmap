@@ -135,6 +135,14 @@ export function Navbar({ currentPath }: NavbarProps) {
           >
             Вакансии
           </button>
+          {(userInfo?.roles.includes("admin") || userInfo?.roles.includes("superuser")) && (
+            <button
+              onClick={() => navigate("/admin")}
+              className={`navbar-link ${isActivePath("/admin") ? "active" : ""}`}
+            >
+              Админ
+            </button>
+          )}
         </div>
 
         <div className="navbar-user">

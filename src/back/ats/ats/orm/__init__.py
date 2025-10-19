@@ -3,6 +3,7 @@ from .user import User, UserRole, UserRoleAssociation
 from .company import Company, HRToCompanyAccess
 from .vacancy import Vacancy, VacancyStatus
 from .employee_respond import EmployeeRespond, EmployeeRespondStatus
+from .file import File, CVFile
 
 __all__ = [
     "Base",
@@ -15,4 +16,6 @@ __all__ = [
     "VacancyStatus",
     "EmployeeRespond",
     "EmployeeRespondStatus",
+    "File",
+    "CVFile",
 ]

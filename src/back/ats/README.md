@@ -10,3 +10,4 @@
 ## Create migration
 
     python -m alembic revision --autogenerate -m users --rev-id 0002
+    python -m alembic upgrade head  

@@ -7,8 +7,11 @@ services:
       - "8000:8000"
     depends_on:
       - postgres-local
+      - gotenberg
     environment:
       - DATABASE_URL=postgresql://ats:ats@postgres-local:5432/professionmap_ats
+    env_file:
+      - local.env
 
   postgres-local:
     image: postgres:17-alpine
@@ -18,4 +21,12 @@ services:
       - POSTGRES_USER=ats
       - POSTGRES_PASSWORD=ats
       - POSTGRES_DB=professionmap_ats
+    restart: unless-stopped
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    ports:
+      - 3000:3000
+    environment:
+      - GOTENBERG_LOG_LEVEL=info
     restart: unless-stopped

@@ -85,6 +85,31 @@ class Settings(BaseSettings):
         description="Base URL for the application",
     )
     
+    # Yandex S3 settings
+    yandex_s3_access_key_id: str = Field(
+        default="",
+        description="Yandex S3 access key ID",
+        alias="YANDEX_S3_ACCESS_KEY_ID"
+    )
+    yandex_s3_secret_access_key: str = Field(
+        default="",
+        description="Yandex S3 secret access key",
+        alias="YANDEX_S3_SECRET_ACCESS_KEY"
+    )
+    s3_bucket_name: str = Field(
+        default="",
+        description="S3 bucket name",
+        alias="S3_BUCKET_NAME"
+    )
+    yandex_s3_endpoint_url: str = Field(
+        default="https://storage.yandexcloud.net",
+        description="Yandex S3 endpoint URL",
+    )
+    yandex_s3_region: str = Field(
+        default="ru-central1",
+        description="Yandex S3 region",
+    )
+    
 
     class Config:
         env_file = ".env"
